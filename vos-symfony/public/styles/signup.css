@@ -96,7 +96,7 @@ body {
 .top-nav {
     max-width: 1240px;
     margin: 0 auto;
-    height: 108px;
+    height: 140px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -108,7 +108,7 @@ body {
 }
 
 .logo-img {
-    height: 84px;
+    height: 110px;
     width: auto;
     display: inline-block;
 }
@@ -133,7 +133,7 @@ body {
 .signup-layout {
     max-width: 1240px;
     margin: 0 auto;
-    min-height: calc(100vh - 118px);
+    min-height: calc(100vh - 150px);
     display: grid;
     grid-template-columns: 1.05fr 1fr;
     border-radius: 20px;
@@ -310,6 +310,60 @@ body {
 .btn-primary:hover {
     background: #0c3474;
     transform: translateY(-1px);
+}
+
+.password-strength-container {
+    margin: 0.5rem 0 0.8rem;
+}
+
+.password-strength-bar {
+    display: block;
+    width: 0;
+    height: 4px;
+    background: #e8e8e8;
+    border-radius: 2px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+    background: linear-gradient(90deg, #e8e8e8, #e8e8e8);
+}
+
+.password-strength-bar.strength-weak {
+    background: linear-gradient(90deg, #c33d3d, #ff6b6b);
+}
+
+.password-strength-bar.strength-medium {
+    background: linear-gradient(90deg, #f5a623, #ffa500);
+}
+
+.password-strength-bar.strength-strong {
+    background: linear-gradient(90deg, #7ed321, #a4de6c);
+}
+
+.password-strength-bar.strength-very-strong {
+    background: linear-gradient(90deg, #2ecc71, #27ae60);
+}
+
+.password-strength-text {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 0.3rem;
+    min-height: 1rem;
+}
+
+.password-strength-text.strength-weak {
+    color: #c33d3d;
+}
+
+.password-strength-text.strength-medium {
+    color: #f5a623;
+}
+
+.password-strength-text.strength-strong {
+    color: #7ed321;
+}
+
+.password-strength-text.strength-very-strong {
+    color: #2ecc71;
 }
 
 .flash {

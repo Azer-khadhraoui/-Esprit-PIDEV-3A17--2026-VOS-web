@@ -12,6 +12,50 @@
 {% block javascripts %}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const passwordInput = document.querySelector('input[name="signup[password]"]');
+            const strengthBar = document.querySelector('[data-password-strength-bar]');
+            const strengthText = document.querySelector('[data-password-strength-text]');
+
+            if (passwordInput && strengthBar && strengthText) {
+                function evaluatePasswordStrength(password) {
+                    let strength = 0;
+
+                    if (password.length >= 6) strength++;
+                    if (password.length >= 10) strength++;
+                    if (password.length >= 14) strength++;
+                    if (/[a-z]/.test(password)) strength++;
+                    if (/[A-Z]/.test(password)) strength++;
+                    if (/[0-9]/.test(password)) strength++;
+                    if (/[^a-zA-Z0-9]/.test(password)) strength++;
+
+                    let level = 'Faible';
+                    let colorClass = 'strength-weak';
+
+                    if (strength >= 5) {
+                        level = 'Très fort';
+                        colorClass = 'strength-very-strong';
+                    } else if (strength >= 4) {
+                        level = 'Fort';
+                        colorClass = 'strength-strong';
+                    } else if (strength >= 3) {
+                        level = 'Moyen';
+                        colorClass = 'strength-medium';
+                    }
+
+                    return { strength, level, colorClass };
+                }
+
+                passwordInput.addEventListener('input', () => {
+                    const password = passwordInput.value;
+                    const { strength, level, colorClass } = evaluatePasswordStrength(password);
+
+                    strengthBar.className = 'password-strength-bar ' + colorClass;
+                    strengthBar.style.width = Math.min((strength / 7) * 100, 100) + '%';
+                    strengthText.textContent = password.length > 0 ? 'Force: ' + level : '';
+                    strengthText.className = 'password-strength-text ' + colorClass;
+                });
+            }
+
             const input = document.querySelector('[data-profile-input="1"]');
             const previewImage = document.querySelector('[data-profile-preview]');
             const previewPlaceholder = document.querySelector('[data-profile-placeholder]');
@@ -96,6 +140,10 @@
                         </div>
                         <div class="field">{{ form_row(signupForm.email) }}</div>
                         <div class="field">{{ form_row(signupForm.password) }}</div>
+                        <div class="password-strength-container">
+                            <div class="password-strength-bar" data-password-strength-bar></div>
+                            <span class="password-strength-text" data-password-strength-text></span>
+                        </div>
                         <div class="field">{{ form_row(signupForm.confirmPassword) }}</div>
 
                         <button type="submit" class="btn-primary">S'inscrire</button>

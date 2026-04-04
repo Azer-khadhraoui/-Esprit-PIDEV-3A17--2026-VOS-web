@@ -32,7 +32,7 @@ body {
 .top-nav {
     max-width: 1240px;
     margin: 0 auto;
-    height: 108px;
+    height: 140px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -44,7 +44,7 @@ body {
 }
 
 .logo-img {
-    height: 84px;
+    height: 110px;
     width: auto;
     display: inline-block;
 }
