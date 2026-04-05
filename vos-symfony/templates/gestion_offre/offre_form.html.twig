@@ -1,4 +1,4 @@
-{% extends 'base.html.twig' %}
+{% extends 'gestion_offre_base.html.twig' %}
 
 {% block title %}{{ pageTitle }} | VOS Admin{% endblock %}
 
@@ -11,7 +11,7 @@
             </div>
 
             <nav class="nav-list">
-                <a class="nav-item" href="#">Gestion Users</a>
+                <a class="nav-item" href="{{ path('app_admin_dashboard') }}">Gestion Users</a>
                 <a class="nav-item is-active" href="{{ path('gestion_offre_dashboard') }}">Gestion Offres</a>
                 <a class="nav-item" href="#">Gestion Entretiens</a>
                 <a class="nav-item" href="#">Gestion Recrutements</a>
@@ -26,7 +26,9 @@
                     <h1 class="page-title" style="font-size:clamp(1.8rem, 2.5vw, 2.7rem);">{{ pageTitle }}</h1>
                     <p class="subtitle">Bienvenue {{ currentUserName }}</p>
                 </div>
-                <a class="logout-btn" href="#">Déconnexion</a>
+                <form method="post" action="{{ path('app_logout') }}">
+                    <button class="logout-btn" type="submit">Déconnexion</button>
+                </form>
             </div>
 
             <nav class="module-nav" aria-label="Navigation offre et critere offre">

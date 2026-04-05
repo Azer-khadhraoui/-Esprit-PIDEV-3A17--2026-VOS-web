@@ -20,7 +20,6 @@ class ClientProfileDto
     #[Assert\Email(message: 'Veuillez entrer un e-mail valide.')]
     public ?string $email = null;
 
-    #[Assert\Length(min: 6, minMessage: 'Le nouveau mot de passe doit contenir au moins {{ limit }} caractères.', max: 255)]
     public ?string $newPassword = null;
 
     public ?string $confirmNewPassword = null;

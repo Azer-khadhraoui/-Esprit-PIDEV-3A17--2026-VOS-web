@@ -76,7 +76,7 @@ class AuthController extends AbstractController
                 $session->set('user_name', trim(($user->getPrenom() ?? '') . ' ' . ($user->getNom() ?? '')));
                 $session->save();
 
-                return $this->redirectToRoute('app_client_offres');
+                return $this->redirectToRoute('client_opportunites');
             }
 
             // Session admin
