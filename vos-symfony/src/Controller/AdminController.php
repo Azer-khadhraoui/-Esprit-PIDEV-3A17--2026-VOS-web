@@ -27,8 +27,9 @@ class AdminController extends AbstractController
         $search = (string) $request->query->get('search', '');
         $sortBy = (string) $request->query->get('sortBy', 'id');
         $sortOrder = (string) $request->query->get('sortOrder', 'DESC');
+        $roleFilter = (string) $request->query->get('role', '');
 
-        $users = $dashboardService->getUsers($search, $sortBy, $sortOrder);
+        $users = $dashboardService->getUsers($search, $sortBy, $sortOrder, $roleFilter);
         $stats = $dashboardService->getStats();
 
         return $this->render('admin/dashboard.html.twig', [
@@ -39,6 +40,7 @@ class AdminController extends AbstractController
             'search' => $search,
             'sortBy' => $sortBy,
             'sortOrder' => $sortOrder,
+            'roleFilter' => $roleFilter,
         ]);
     }
 
@@ -100,6 +102,24 @@ class AdminController extends AbstractController
         }
 
         return $this->redirectToRoute('app_admin_dashboard');
+    }
+
+    #[Route('/users/statistique', name: 'app_admin_users_statistique', methods: ['GET'])]
+    public function usersStatistique(AdminDashboardService $dashboardService, SessionInterface $session): Response
+    {
+        $access = $this->requireAdmin($session);
+        if ($access instanceof RedirectResponse) {
+            return $access;
+        }
+
+        $stats = $dashboardService->getStats();
+        $roleStats = $dashboardService->getRoleStats();
+
+        return $this->render('admin/users_statistique.html.twig', [
+            'stats' => $stats,
+            'roleStats' => $roleStats,
+            'adminName' => (string) $session->get('admin_user_name', 'Admin'),
+        ]);
     }
 
     private function requireAdmin(SessionInterface $session): RedirectResponse|null

@@ -8,12 +8,13 @@ use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 class ClientOffreController extends AbstractController
 {
     #[Route('/opportunites', name: 'client_opportunites', methods: ['GET'])]
-    public function index(Request $request, EntityManagerInterface $entityManager): Response
+    public function index(Request $request, EntityManagerInterface $entityManager, SessionInterface $session): Response
     {
         $offreRepository = $entityManager->getRepository(OffreEmploi::class);
         $page = max(1, (int) $request->query->get('page', 1));
@@ -79,10 +80,12 @@ class ClientOffreController extends AbstractController
             ->getResult();
 
         $criteriaByOffer = $this->getLatestCriteriaByOffer($entityManager);
+        $isClientAuthenticated = (bool) $session->get('user_id') && (string) $session->get('user_role', '') === 'CLIENT';
 
         return $this->render('client/opportunites.html.twig', [
             'offers' => $offers,
             'criteriaByOffer' => $criteriaByOffer,
+            'isClientAuthenticated' => $isClientAuthenticated,
             'pagination' => [
                 'page' => $page,
                 'perPage' => $perPage,

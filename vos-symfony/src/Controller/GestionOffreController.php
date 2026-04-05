@@ -21,6 +21,26 @@ class GestionOffreController extends AbstractController
         $statutFilter = $this->normalizeText($request->query->get('statut'));
         $typeContratFilter = $this->normalizeText($request->query->get('type_contrat'));
         $workPreferenceFilter = $this->normalizeText($request->query->get('work_preference'));
+        $sortBy = $this->normalizeText($request->query->get('sortBy')) ?? 'date_publication';
+        $sortOrder = strtoupper($this->normalizeText($request->query->get('sortOrder')) ?? 'DESC');
+
+        $sortMap = [
+            'id' => 'o.idOffre',
+            'titre' => 'o.titre',
+            'type_contrat' => 'o.typeContrat',
+            'work_preference' => 'o.workPreference',
+            'lieu' => 'o.lieu',
+            'statut' => 'o.statutOffre',
+            'date_publication' => 'o.datePublication',
+        ];
+
+        if (!isset($sortMap[$sortBy])) {
+            $sortBy = 'date_publication';
+        }
+
+        if (!in_array($sortOrder, ['ASC', 'DESC'], true)) {
+            $sortOrder = 'DESC';
+        }
 
         $qb = $offreRepository->createQueryBuilder('o');
 
@@ -49,7 +69,7 @@ class GestionOffreController extends AbstractController
         }
 
         $offers = $qb
-            ->orderBy('o.datePublication', 'DESC')
+            ->orderBy($sortMap[$sortBy], $sortOrder)
             ->getQuery()
             ->getResult();
 
@@ -74,6 +94,8 @@ class GestionOffreController extends AbstractController
                 'statut' => $statutFilter,
                 'type_contrat' => $typeContratFilter,
                 'work_preference' => $workPreferenceFilter,
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
             ],
             'filterOptions' => [
                 'statuts' => $this->getDistinctOffreValues($entityManager, 'statut_offre'),

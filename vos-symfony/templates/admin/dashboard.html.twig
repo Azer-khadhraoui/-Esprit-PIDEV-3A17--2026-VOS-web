@@ -1,8 +1,8 @@
-{% extends 'base.html.twig' %}
+{% extends 'gestion_offre_base.html.twig' %}
 
 {% block title %}Dashboard Admin | VOS{% endblock %}
 
-{% block stylesheets %}
+{% block styles %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -12,17 +12,17 @@
 {% block body %}
 <div class="admin-shell">
     <aside class="sidebar">
-        <div class="sidebar-brand">
+        <div class="brand">
             <span class="brand-dot"></span>
-            VOS Admin
+            <span>VOS Admin</span>
         </div>
-        <nav class="sidebar-nav">
-            <a class="active" href="{{ path('app_admin_dashboard') }}">Gestion Users</a>
-            <a href="#">Gestion Offres</a>
-            <a href="#">Gestion Entretiens</a>
-            <a href="#">Gestion Recrutements</a>
-            <a href="#">Forum</a>
-            <a href="#">Rapports</a>
+        <nav class="nav-list">
+            <a class="nav-item is-active" href="{{ path('app_admin_dashboard') }}">Gestion Users</a>
+            <a class="nav-item" href="{{ path('gestion_offre_dashboard') }}">Gestion Offres</a>
+            <a class="nav-item" href="#">Gestion Entretiens</a>
+            <a class="nav-item" href="#">Gestion Recrutements</a>
+            <a class="nav-item" href="#">Forum</a>
+            <a class="nav-item" href="#">Rapports</a>
         </nav>
         <div class="sidebar-footer">Panel Administration</div>
     </aside>
@@ -38,6 +38,11 @@
             </form>
         </header>
 
+        <nav class="module-nav" aria-label="Navigation users">
+            <a class="module-link is-active" href="{{ path('app_admin_dashboard') }}">Users</a>
+            <a class="module-link" href="{{ path('app_admin_users_statistique') }}">Statistique</a>
+        </nav>
+
         {% for message in app.flashes('error') %}
             <div class="flash flash-error">{{ message }}</div>
         {% endfor %}
@@ -47,11 +52,11 @@
 
         <section class="stats-grid">
             <article class="stat-card stat-total">
-                <h3>Total Users</h3>
+                <h3>Total utilisateurs</h3>
                 <p>{{ stats.total }}</p>
             </article>
             <article class="stat-card stat-admins">
-                <h3>Admins</h3>
+                <h3>Administrateurs</h3>
                 <p>{{ stats.admins }}</p>
             </article>
             <article class="stat-card stat-clients">
@@ -69,11 +74,20 @@
             <div class="search-filters">
                 <form method="GET" class="filter-form">
                     <input type="text" name="search" placeholder="Rechercher par nom, prénom ou email..." value="{{ search }}" class="search-input">
-                    
+
+                    <select name="role" class="sort-select">
+                        <option value="">Tous les rôles</option>
+                        <option value="CLIENT" {% if roleFilter == 'CLIENT' %}selected{% endif %}>Client</option>
+                        <option value="ADMIN_RH" {% if roleFilter == 'ADMIN_RH' %}selected{% endif %}>Admin RH</option>
+                        <option value="ADMIN_TECHNIQUE" {% if roleFilter == 'ADMIN_TECHNIQUE' %}selected{% endif %}>Admin technique</option>
+                    </select>
+
                     <select name="sortBy" class="sort-select">
                         <option value="id" {% if sortBy == 'id' %}selected{% endif %}>Trier par ID</option>
-                        <option value="nom" {% if sortBy == 'nom' %}selected{% endif %}>Trier par Nom</option>
-                        <option value="email" {% if sortBy == 'email' %}selected{% endif %}>Trier par Email</option>
+                        <option value="nom" {% if sortBy == 'nom' %}selected{% endif %}>Trier par nom</option>
+                        <option value="prenom" {% if sortBy == 'prenom' %}selected{% endif %}>Trier par prénom</option>
+                        <option value="email" {% if sortBy == 'email' %}selected{% endif %}>Trier par email</option>
+                        <option value="role" {% if sortBy == 'role' %}selected{% endif %}>Trier par rôle</option>
                     </select>
 
                     <select name="sortOrder" class="sort-select">
@@ -145,6 +159,7 @@
         }
 
         const searchInput = form.querySelector('input[name="search"]');
+        const roleSelect = form.querySelector('select[name="role"]');
         const sortBySelect = form.querySelector('select[name="sortBy"]');
         const sortOrderSelect = form.querySelector('select[name="sortOrder"]');
         let debounceTimer;
@@ -158,6 +173,10 @@
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(submitFilters, 350);
             });
+        }
+
+        if (roleSelect) {
+            roleSelect.addEventListener('change', submitFilters);
         }
 
         if (sortBySelect) {

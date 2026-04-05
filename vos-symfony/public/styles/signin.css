@@ -202,6 +202,51 @@ body {
     border-bottom-color: #4b74cd;
 }
 
+.password-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-field input[type="password"],
+.password-field input[type="text"] {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+    padding: 0.45rem 2.4rem 0.45rem 0;
+    font-size: 0.95rem;
+    color: #1f2a3d;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+}
+
+.password-field input[type="password"]:focus,
+.password-field input[type="text"]:focus {
+    border-bottom-color: #4b74cd;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 0.1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 0;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0.2rem;
+    line-height: 1;
+}
+
+.toggle-password:hover {
+    color: #0f3c87;
+}
+
+.toggle-password.is-visible {
+    color: #0f3c87;
+}
+
 .field-remember {
     display: flex;
     justify-content: space-between;

@@ -69,6 +69,74 @@ body {
     z-index: 2;
 }
 
+.header {
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 30;
+}
+
+.header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    gap: 16px;
+}
+
+.header .brand {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    color: #1b2440;
+}
+
+.nav {
+    display: flex;
+    gap: 24px;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.nav a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.nav a.is-active,
+.nav a:hover {
+    color: var(--primary);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.signup {
+    border: 0;
+    border-radius: 999px;
+    padding: 10px 16px;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.header .btn-logout-client {
+    background: rgba(14, 77, 164, 0.12);
+    color: var(--primary);
+    border: 1px solid rgba(14, 77, 164, 0.28);
+}
+
+.header .btn-logout-client:hover {
+    background: rgba(14, 77, 164, 0.2);
+}
+
 @keyframes clientGlowFloat {
     0%,
     100% {
@@ -563,6 +631,14 @@ body {
 
     .profile-grid {
         grid-template-columns: 1fr;
+    }
+
+    .nav {
+        display: none;
+    }
+
+    .header-inner {
+        justify-content: space-between;
     }
 }
 
