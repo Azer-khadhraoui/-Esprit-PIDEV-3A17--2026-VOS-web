@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\CandidatureRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CandidatureRepository::class)]
 class Candidature
@@ -12,54 +13,76 @@ class Candidature
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    private ?int $id = null;
+    private ?int $id_candidature = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    private ?\DateTime $dateCandidature = null;
+    #[Assert\NotNull(message: "La date de candidature est obligatoire.")]
+    #[Assert\LessThanOrEqual("today", message: "La date ne peut pas être dans le futur.")]
+    private ?\DateTime $date_candidature = null;
 
     #[ORM\Column(length: 50, nullable: true)]
+    #[Assert\NotBlank(message: "Le statut est obligatoire.")]
+    #[Assert\Choice(
+        choices: ["En attente", "Accepté", "Refusé"],
+        message: "Statut invalide."
+    )]
     private ?string $statut = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Length(max: 1000, maxMessage: "Le message ne peut pas dépasser 1000 caractères.")]
+
     private ?string $message_candidat = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\NotBlank(message: "Le CV est obligatoire.")]
+
     private ?string $cv = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\NotBlank(message: "La lettre de motivation est obligatoire.")]
     private ?string $lettre_motivation = null;
 
     #[ORM\Column(length: 50, nullable: true)]
+    #[Assert\Choice(
+        choices: ["Débutant", "Junior", "Confirmé", "Senior", "Expert"],
+        message: "Niveau d'expérience invalide."
+    )]
     private ?string $niveau_experience = null;
 
     #[ORM\Column(nullable: true)]
+     #[Assert\PositiveOrZero(message: "Les années d'expérience doivent être >= 0.")]
+    #[Assert\LessThanOrEqual(50, message: "Les années d'expérience semblent incorrectes.")]
     private ?int $annees_experience = null;
 
     #[ORM\Column(length: 100, nullable: true)]
+    #[Assert\Length(max: 100, maxMessage: "Le domaine ne peut pas dépasser 100 caractères.")]
+
     private ?string $domaine_experience = null;
 
     #[ORM\Column(length: 100, nullable: true)]
+    #[Assert\Length(max: 100, maxMessage: "Le dernier poste ne peut pas dépasser 100 caractères.")]
+
     private ?string $dernier_poste = null;
 
     #[ORM\Column(nullable: true)]
-    private ?int $id_utilisateur = null;
+    private ?int $id_utilisateur = 30;
 
     #[ORM\Column(nullable: true)]
-    private ?int $id_offre = null;
+    private ?int $id_offre = 1;
 
     public function getId(): ?int
     {
-        return $this->id;
+        return $this->id_candidature;
     }
 
     public function getDateCandidature(): ?\DateTime
     {
-        return $this->dateCandidature;
+        return $this->date_candidature;
     }
 
-    public function setDateCandidature(?\DateTime $dateCandidature): static
+    public function setDateCandidature(?\DateTime $date_candidature): static
     {
-        $this->dateCandidature = $dateCandidature;
+        $this->date_candidature = $date_candidature;
 
         return $this;
     }
