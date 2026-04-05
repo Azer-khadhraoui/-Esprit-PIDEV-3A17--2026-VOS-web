@@ -36,42 +36,81 @@ class EntretienController extends AbstractController
 
     #[Route('/stats', name: 'app_entretien_stats', methods: ['GET'])]
     public function stats(
+        Request $request,
         EntretienRepository $entretienRepository,
         EvaluationEntretienRepository $evalRepository
     ): Response {
-        $entretiens  = $entretienRepository->findAll();
+        // ── Filtres ──
+        $dateDebut  = $request->query->get('dateDebut');
+        $dateFin    = $request->query->get('dateFin');
+        $typeFilter = $request->query->get('type');
+        $periode    = $request->query->get('periode', '');
+
+        // Raccourcis période
+        $today = new \DateTime();
+        if ($periode === '7j') {
+            $dateDebut = (clone $today)->modify('-7 days')->format('Y-m-d');
+            $dateFin   = $today->format('Y-m-d');
+        } elseif ($periode === '30j') {
+            $dateDebut = (clone $today)->modify('-30 days')->format('Y-m-d');
+            $dateFin   = $today->format('Y-m-d');
+        } elseif ($periode === '3m') {
+            $dateDebut = (clone $today)->modify('-3 months')->format('Y-m-d');
+            $dateFin   = $today->format('Y-m-d');
+        } elseif ($periode === '6m') {
+            $dateDebut = (clone $today)->modify('-6 months')->format('Y-m-d');
+            $dateFin   = $today->format('Y-m-d');
+        } elseif ($periode === '1an') {
+            $dateDebut = (clone $today)->modify('-1 year')->format('Y-m-d');
+            $dateFin   = $today->format('Y-m-d');
+        }
+
+        // ── Requêtes filtrées ──
+        $entretiens  = $entretienRepository->findForStats($dateDebut, $dateFin, $typeFilter);
         $evaluations = $evalRepository->findAll();
 
-        $total = count($entretiens);
-        $termines = $planifies = $autres = 0;
-        $parStatut = $parType = [];
+        // ── Calculs entretiens ──
+        $total    = count($entretiens);
+        $termines = $planifies = $autres = $nbRH = $nbTechnique = 0;
+        $parStatut = $parType = $parMois = [];
 
         foreach ($entretiens as $e) {
             $statut = $e->getStatutEntretien() ?? 'Autre';
             $type   = $e->getTypeEntretien()   ?? 'Autre';
             $sl     = strtolower($statut);
 
-            if (str_contains($sl, 'termin')) {
-                $termines++;
-            } elseif (str_contains($sl, 'planifi')) {
-                $planifies++;
-            } else {
-                $autres++;
-            }
+            if (str_contains($sl, 'termin'))      $termines++;
+            elseif (str_contains($sl, 'planifi')) $planifies++;
+            else                                   $autres++;
+
+            if ($type === 'RH')        $nbRH++;
+            if ($type === 'TECHNIQUE') $nbTechnique++;
 
             $parStatut[$statut] = ($parStatut[$statut] ?? 0) + 1;
             $parType[$type]     = ($parType[$type]     ?? 0) + 1;
+
+            // Par mois
+            if ($e->getDateEntretien()) {
+                $mois = $e->getDateEntretien()->format('M Y');
+                $parMois[$mois] = ($parMois[$mois] ?? 0) + 1;
+            }
         }
 
-        $totalEvals  = count($evaluations);
-        $scoreMoyen  = 0;
-        $noteMoyenne = 0;
-        $evalStats   = [0, 0, 0, 0, 0]; // tech, comp, comm, mot, exp
+        // ── Calculs évaluations ──
+        $totalEvals = count($evaluations);
+        $nbAcceptes = $nbRefuses = $nbEnAttente = 0;
+        $scoreMoyen = $noteMoyenne = 0;
+        $evalStats  = [0, 0, 0, 0, 0];
 
         if ($totalEvals > 0) {
             foreach ($evaluations as $ev) {
-                $scoreMoyen  += $ev->getScoreTest()      ?? 0;
-                $noteMoyenne += $ev->getNoteEntretien()  ?? 0;
+                $d = strtolower($ev->getDecision() ?? '');
+                if (str_contains($d, 'accept'))  $nbAcceptes++;
+                elseif (str_contains($d, 'refus')) $nbRefuses++;
+                else $nbEnAttente++;
+
+                $scoreMoyen  += $ev->getScoreTest()     ?? 0;
+                $noteMoyenne += $ev->getNoteEntretien() ?? 0;
                 $evalStats[0] += $ev->getCompetencesTechniques()       ?? 0;
                 $evalStats[1] += $ev->getCompetencesComportementales() ?? 0;
                 $evalStats[2] += $ev->getCommunication() ?? 0;
@@ -83,20 +122,36 @@ class EntretienController extends AbstractController
             $evalStats   = array_map(fn($v) => round($v / $totalEvals, 1), $evalStats);
         }
 
-       return $this->render('entretien/stats.html.twig', [
-    'total'           => $total,
-    'termines'        => $termines,
-    'planifies'       => $planifies,
-    'autres'          => $autres,
-    'totalEvals'      => $totalEvals,
-    'scoreMoyen'      => $scoreMoyen,
-    'noteMoyenne'     => $noteMoyenne,
-    'parStatutLabels' => array_keys($parStatut),
-    'parStatutData'   => array_values($parStatut),
-    'parTypeLabels'   => array_keys($parType),
-    'parTypeData'     => array_values($parType),
-    'evalStats'       => $evalStats,
-]);
+        // Taux de réussite
+        $tauxReussite = $totalEvals > 0 ? round(($nbAcceptes / $totalEvals) * 100, 1) : 0;
+
+        return $this->render('entretien/stats.html.twig', [
+            'total'           => $total,
+            'termines'        => $termines,
+            'planifies'       => $planifies,
+            'autres'          => $autres,
+            'nbRH'            => $nbRH,
+            'nbTechnique'     => $nbTechnique,
+            'totalEvals'      => $totalEvals,
+            'nbAcceptes'      => $nbAcceptes,
+            'nbRefuses'       => $nbRefuses,
+            'nbEnAttente'     => $nbEnAttente,
+            'scoreMoyen'      => $scoreMoyen,
+            'noteMoyenne'     => $noteMoyenne,
+            'tauxReussite'    => $tauxReussite,
+            'parStatutLabels' => array_keys($parStatut),
+            'parStatutData'   => array_values($parStatut),
+            'parTypeLabels'   => array_keys($parType),
+            'parTypeData'     => array_values($parType),
+            'parMoisLabels'   => array_keys($parMois),
+            'parMoisData'     => array_values($parMois),
+            'evalStats'       => $evalStats,
+            // Filtres actifs
+            'dateDebut'       => $dateDebut,
+            'dateFin'         => $dateFin,
+            'typeFilter'      => $typeFilter,
+            'periode'         => $periode,
+        ]);
     }
 
     #[Route('/new', name: 'app_entretien_new', methods: ['GET', 'POST'])]
@@ -122,9 +177,7 @@ class EntretienController extends AbstractController
     #[Route('/{id}', name: 'app_entretien_show', methods: ['GET'])]
     public function show(Entretien $entretien): Response
     {
-        return $this->render('entretien/show.html.twig', [
-            'entretien' => $entretien,
-        ]);
+        return $this->render('entretien/show.html.twig', ['entretien' => $entretien]);
     }
 
     #[Route('/{id}/edit', name: 'app_entretien_edit', methods: ['GET', 'POST'])]
