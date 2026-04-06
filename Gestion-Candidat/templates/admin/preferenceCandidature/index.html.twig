@@ -90,10 +90,16 @@
                     {% for preference in preferences %}
                         <tr>
                             <td>#{{ preference.idPreference }}</td>
-                            <td>{{ preference.idUtilisateur.nom }} {{ preference.idUtilisateur.prenom }}</td>
+                            <td>
+                                {% if users[preference.idUtilisateur] %}
+                                    {{ users[preference.idUtilisateur].nom }} {{ users[preference.idUtilisateur].prenom }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
                             <td>{{ preference.typePosteSouhaite ?? '-' }}</td>
                             <td>{{ preference.modeTravail ?? '-' }}</td>
-                            <td>{{ preference.disponibilite|date('d/m/Y') ?? '-' }}</td>
+                            <td>{{ preference.dateDisponibilite ? preference.dateDisponibilite|date('d/m/Y') : '-' }}</td>
                             <td>
                                 <div class="actions">
                                     <a class="btn-edit" href="{{ path('app_admin_preference_edit', {id: preference.idPreference}) }}">Modifier</a>

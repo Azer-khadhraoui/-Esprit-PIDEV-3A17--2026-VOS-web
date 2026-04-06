@@ -252,22 +252,44 @@ class AdminController extends AbstractController
         }
 
         $search = (string) $request->query->get('search', '');
-        $sortBy = (string) $request->query->get('sortBy', 'id');
+        $sortBy = (string) $request->query->get('sortBy', 'id_preference');
         $sortOrder = (string) $request->query->get('sortOrder', 'DESC');
+
+        $allowedSortFields = [
+            'id_preference' => 'p.id_preference',
+            'type_poste_souhaite' => 'p.type_poste_souhaite',
+            'mode_travail' => 'p.mode_travail',
+            'disponibilite' => 'p.disponibilite',
+            'date_disponibilite' => 'p.date_disponibilite',
+        ];
+
+        $sortBy = array_key_exists($sortBy, $allowedSortFields) ? $sortBy : 'id_preference';
+        $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
 
         $qb = $entityManager->getRepository(PreferenceCandidature::class)->createQueryBuilder('p');
         
-        if ($search !== '') {
-            $qb->join('p.id_utilisateur', 'u')
-               ->andWhere('u.nom LIKE :search OR u.prenom LIKE :search OR p.type_poste_souhaite LIKE :search')
-               ->setParameter('search', '%'.$search.'%');
-        }
-
-        $qb->orderBy('p.' . $sortBy, $sortOrder);
+        $qb->orderBy($allowedSortFields[$sortBy], $sortOrder);
         $preferences = $qb->getQuery()->getResult();
+
+        // Charger les User séparément
+        $userIds = [];
+        foreach ($preferences as $preference) {
+            if ($preference->getIdUtilisateur()) {
+                $userIds[$preference->getIdUtilisateur()] = true;
+            }
+        }
+        
+        $users = [];
+        if (!empty($userIds)) {
+            $userObjs = $entityManager->getRepository(User::class)->findBy(['id' => array_keys($userIds)]);
+            foreach ($userObjs as $user) {
+                $users[$user->getId()] = $user;
+            }
+        }
 
         return $this->render('admin/preferenceCandidature/index.html.twig', [
             'preferences' => $preferences,
+            'users' => $users,
             'adminName' => (string) $session->get('admin_user_name', 'Admin'),
             'search' => $search,
             'sortBy' => $sortBy,
@@ -286,18 +308,31 @@ class AdminController extends AbstractController
         if ($request->isMethod('POST')) {
             $preference->setTypePosteSouhaite((string) $request->request->get('type_poste_souhaite'));
             $preference->setModeTravail((string) $request->request->get('mode_travail'));
-            $preference->setDisponibilite($request->request->get('disponibilite') ? new \DateTime($request->request->get('disponibilite')) : null);
+            $preference->setDisponibilite((string) $request->request->get('disponibilite'));
             $preference->setMobiliteGeographique((string) $request->request->get('mobilite_geographique'));
-            $preference->setPretDeplacement((bool) $request->request->get('pret_deplacement'));
+            $preference->setPretDeplacement((string) $request->request->get('pret_deplacement'));
             $preference->setTypeContratSouhaite((string) $request->request->get('type_contrat_souhaite'));
+            
+            // Traiter la date de disponibilité
+            $dateDisp = $request->request->get('date_disponibilite');
+            if ($dateDisp) {
+                $preference->setDateDisponibilite(new \DateTime($dateDisp));
+            }
             
             $entityManager->flush();
             $this->addFlash('success', 'Préférence modifiée avec succès.');
             return $this->redirectToRoute('app_admin_preferences');
         }
 
+        // Charger l'utilisateur
+        $user = null;
+        if ($preference->getIdUtilisateur()) {
+            $user = $entityManager->getRepository(User::class)->find($preference->getIdUtilisateur());
+        }
+
         return $this->render('admin/preferenceCandidature/edit.html.twig', [
             'preference' => $preference,
+            'user' => $user,
             'adminName' => (string) $session->get('admin_user_name', 'Admin'),
         ]);
     }
