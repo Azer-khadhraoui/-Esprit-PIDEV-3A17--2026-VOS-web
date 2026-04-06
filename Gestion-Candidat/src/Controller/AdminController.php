@@ -2,10 +2,14 @@
 
 namespace App\Controller;
 
+use App\Entity\Candidature;
+use App\Entity\OffreEmploi;
+use App\Entity\PreferenceCandidature;
 use App\Entity\User;
 use App\Form\AdminUserType;
 use App\Service\AdminDashboardService;
 use App\Service\AdminUserService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -120,6 +124,206 @@ class AdminController extends AbstractController
             'roleStats' => $roleStats,
             'adminName' => (string) $session->get('admin_user_name', 'Admin'),
         ]);
+    }
+
+    #[Route('/candidatures', name: 'app_admin_candidatures', methods: ['GET'])]
+    public function candidatures(EntityManagerInterface $entityManager, SessionInterface $session, Request $request): Response
+    {
+        $access = $this->requireAdmin($session);
+        if ($access instanceof RedirectResponse) {
+            return $access;
+        }
+
+        $search = (string) $request->query->get('search', '');
+        $sortBy = (string) $request->query->get('sortBy', 'id_candidature');
+        $sortOrder = (string) $request->query->get('sortOrder', 'DESC');
+
+        $qb = $entityManager->getRepository(Candidature::class)->createQueryBuilder('c')
+            ->orderBy('c.' . $sortBy, $sortOrder);
+        
+        $candidatures = $qb->getQuery()->getResult();
+        
+        // Charger les User et OffreEmploi séparément
+        $userIds = [];
+        $offreIds = [];
+        
+        foreach ($candidatures as $candidature) {
+            if ($candidature->getIdUtilisateur()) {
+                $userIds[$candidature->getIdUtilisateur()] = true;
+            }
+            if ($candidature->getIdOffre()) {
+                $offreIds[$candidature->getIdOffre()] = true;
+            }
+        }
+        
+        $users = [];
+        $offres = [];
+        
+        if (!empty($userIds)) {
+            $userObjs = $entityManager->getRepository(User::class)->findBy(['id' => array_keys($userIds)]);
+            foreach ($userObjs as $user) {
+                $users[$user->getId()] = $user;
+            }
+        }
+        
+        if (!empty($offreIds)) {
+            $offreObjs = $entityManager->getRepository(OffreEmploi::class)->findBy(['idOffre' => array_keys($offreIds)]);
+            foreach ($offreObjs as $offre) {
+                $offres[$offre->getIdOffre()] = $offre;
+            }
+        }
+
+        return $this->render('admin/candidature/index.html.twig', [
+            'candidatures' => $candidatures,
+            'adminName' => (string) $session->get('admin_user_name', 'Admin'),
+            'search' => $search,
+            'sortBy' => $sortBy,
+            'sortOrder' => $sortOrder,
+            'users' => $users,
+            'offres' => $offres,
+        ]);
+    }
+
+    #[Route('/candidatures/{id}/edit', name: 'app_admin_candidature_edit', methods: ['GET', 'POST'])]
+    public function editCandidature(Candidature $candidature, Request $request, EntityManagerInterface $entityManager, SessionInterface $session): Response
+    {
+        $access = $this->requireAdmin($session);
+        if ($access instanceof RedirectResponse) {
+            return $access;
+        }
+
+        if ($request->isMethod('POST')) {
+            $candidature->setStatut((string) $request->request->get('statut', $candidature->getStatut()));
+            $entityManager->flush();
+            $this->addFlash('success', 'Candidature modifiée avec succès.');
+            return $this->redirectToRoute('app_admin_candidatures');
+        }
+
+        // Charger l'utilisateur et l'offre séparément
+        $user = null;
+        $offre = null;
+        
+        if ($candidature->getIdUtilisateur()) {
+            $user = $entityManager->getRepository(User::class)->find($candidature->getIdUtilisateur());
+        }
+        
+        if ($candidature->getIdOffre()) {
+            $offre = $entityManager->getRepository(OffreEmploi::class)->find($candidature->getIdOffre());
+        }
+
+        return $this->render('admin/candidature/edit.html.twig', [
+            'candidature' => $candidature,
+            'adminName' => (string) $session->get('admin_user_name', 'Admin'),
+            'user' => $user,
+            'offre' => $offre,
+        ]);
+    }
+
+    #[Route('/candidatures/{id}/delete', name: 'app_admin_candidature_delete', methods: ['POST'])]
+    public function deleteCandidature(Candidature $candidature, Request $request, EntityManagerInterface $entityManager, SessionInterface $session): Response
+    {
+        $access = $this->requireAdmin($session);
+        if ($access instanceof RedirectResponse) {
+            return $access;
+        }
+
+        if (!$this->isCsrfTokenValid('delete_candidature_' . $candidature->getIdCandidature(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('app_admin_candidatures');
+        }
+
+        try {
+            $entityManager->remove($candidature);
+            $entityManager->flush();
+            $this->addFlash('success', 'Candidature supprimée avec succès.');
+        } catch (\Throwable $exception) {
+            $this->addFlash('error', 'Erreur lors de la suppression.');
+        }
+
+        return $this->redirectToRoute('app_admin_candidatures');
+    }
+
+    #[Route('/preferences', name: 'app_admin_preferences', methods: ['GET'])]
+    public function preferences(EntityManagerInterface $entityManager, SessionInterface $session, Request $request): Response
+    {
+        $access = $this->requireAdmin($session);
+        if ($access instanceof RedirectResponse) {
+            return $access;
+        }
+
+        $search = (string) $request->query->get('search', '');
+        $sortBy = (string) $request->query->get('sortBy', 'id');
+        $sortOrder = (string) $request->query->get('sortOrder', 'DESC');
+
+        $qb = $entityManager->getRepository(PreferenceCandidature::class)->createQueryBuilder('p');
+        
+        if ($search !== '') {
+            $qb->join('p.id_utilisateur', 'u')
+               ->andWhere('u.nom LIKE :search OR u.prenom LIKE :search OR p.type_poste_souhaite LIKE :search')
+               ->setParameter('search', '%'.$search.'%');
+        }
+
+        $qb->orderBy('p.' . $sortBy, $sortOrder);
+        $preferences = $qb->getQuery()->getResult();
+
+        return $this->render('admin/preferenceCandidature/index.html.twig', [
+            'preferences' => $preferences,
+            'adminName' => (string) $session->get('admin_user_name', 'Admin'),
+            'search' => $search,
+            'sortBy' => $sortBy,
+            'sortOrder' => $sortOrder,
+        ]);
+    }
+
+    #[Route('/preferences/{id}/edit', name: 'app_admin_preference_edit', methods: ['GET', 'POST'])]
+    public function editPreference(PreferenceCandidature $preference, Request $request, EntityManagerInterface $entityManager, SessionInterface $session): Response
+    {
+        $access = $this->requireAdmin($session);
+        if ($access instanceof RedirectResponse) {
+            return $access;
+        }
+
+        if ($request->isMethod('POST')) {
+            $preference->setTypePosteSouhaite((string) $request->request->get('type_poste_souhaite'));
+            $preference->setModeTravail((string) $request->request->get('mode_travail'));
+            $preference->setDisponibilite($request->request->get('disponibilite') ? new \DateTime($request->request->get('disponibilite')) : null);
+            $preference->setMobiliteGeographique((string) $request->request->get('mobilite_geographique'));
+            $preference->setPretDeplacement((bool) $request->request->get('pret_deplacement'));
+            $preference->setTypeContratSouhaite((string) $request->request->get('type_contrat_souhaite'));
+            
+            $entityManager->flush();
+            $this->addFlash('success', 'Préférence modifiée avec succès.');
+            return $this->redirectToRoute('app_admin_preferences');
+        }
+
+        return $this->render('admin/preferenceCandidature/edit.html.twig', [
+            'preference' => $preference,
+            'adminName' => (string) $session->get('admin_user_name', 'Admin'),
+        ]);
+    }
+
+    #[Route('/preferences/{id}/delete', name: 'app_admin_preference_delete', methods: ['POST'])]
+    public function deletePreference(PreferenceCandidature $preference, Request $request, EntityManagerInterface $entityManager, SessionInterface $session): Response
+    {
+        $access = $this->requireAdmin($session);
+        if ($access instanceof RedirectResponse) {
+            return $access;
+        }
+
+        if (!$this->isCsrfTokenValid('delete_preference_' . $preference->getIdPreference(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('app_admin_preferences');
+        }
+
+        try {
+            $entityManager->remove($preference);
+            $entityManager->flush();
+            $this->addFlash('success', 'Préférence supprimée avec succès.');
+        } catch (\Throwable $exception) {
+            $this->addFlash('error', 'Erreur lors de la suppression.');
+        }
+
+        return $this->redirectToRoute('app_admin_preferences');
     }
 
     private function requireAdmin(SessionInterface $session): RedirectResponse|null

@@ -1,0 +1,281 @@
+{% extends 'gestion_offre_base.html.twig' %}
+
+{% block title %}Modifier Candidature | VOS Admin{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ asset('styles/admin.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="admin-shell">
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-dot"></span>
+            <span>VOS Admin</span>
+        </div>
+        <nav class="nav-list">
+            <a class="nav-item" href="{{ path('app_admin_dashboard') }}">Gestion Users</a>
+            <a class="nav-item" href="{{ path('gestion_offre_dashboard') }}">Gestion Offres</a>
+            <a class="nav-item is-active" href="{{ path('app_admin_candidatures') }}">Gestion Candidatures</a>
+            <a class="nav-item" href="{{ path('app_admin_preferences') }}">Gestion Préférences</a>
+            <a class="nav-item" href="#">Gestion Entretiens</a>
+            <a class="nav-item" href="#">Gestion Recrutements</a>
+            <a class="nav-item" href="#">Forum</a>
+            <a class="nav-item" href="#">Rapports</a>
+        </nav>
+        <div class="sidebar-footer">Panel Administration</div>
+    </aside>
+
+    <main class="content">
+        <header class="topbar">
+            <div>
+                <h1>Modifier Candidature</h1>
+                <p>Bienvenue {{ adminName }}</p>
+            </div>
+            <form method="post" action="{{ path('app_logout') }}">
+                <button class="btn-logout" type="submit">Déconnexion</button>
+            </form>
+        </header>
+
+        {% for message in app.flashes('error') %}
+            <div class="flash flash-error">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('success') %}
+            <div class="flash flash-success">{{ message }}</div>
+        {% endfor %}
+
+        <section class="table-card">
+            <div class="table-head">
+                <h2>Candidature #{{ candidature.idCandidature }}</h2>
+            </div>
+
+            <div class="form-section">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Candidat</label>
+                        <p class="form-value">{% if user %}{{ user.nom }} {{ user.prenom }}{% else %}N/A{% endif %}</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Offre</label>
+                        <p class="form-value">{% if offre %}{{ offre.titre }}{% else %}N/A{% endif %}</p>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date de candidature</label>
+                        <p class="form-value">{{ candidature.dateCandidature|date('d/m/Y') }}</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Niveau d'expérience</label>
+                        <p class="form-value">{{ candidature.niveauExperience ?? 'N/A' }}</p>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Années d'expérience</label>
+                        <p class="form-value">{{ candidature.anneesExperience ?? 'N/A' }}</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Domaine d'expérience</label>
+                        <p class="form-value">{{ candidature.domaineExperience ?? 'N/A' }}</p>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Dernier poste</label>
+                        <p class="form-value">{{ candidature.dernierPoste ?? 'N/A' }}</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Statut</label>
+                        <form method="POST" class="inline-form">
+                            <select name="statut" class="form-select">
+                                <option value="En attente" {% if candidature.statut == 'En attente' %}selected{% endif %}>En attente</option>
+                                <option value="En examens" {% if candidature.statut == 'En examens' %}selected{% endif %}>En examens</option>
+                                <option value="Acceptlee" {% if candidature.statut == 'Acceptlee' %}selected{% endif %}>Acceptée</option>
+                                <option value="Rejetee" {% if candidature.statut == 'Rejetee' %}selected{% endif %}>Rejetée</option>
+                            </select>
+                            <button type="submit" class="btn-save">Enregistrer</button>
+                            <a href="{{ path('app_admin_candidatures') }}" class="btn-cancel">Annuler</a>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Message du candidat</label>
+                    <p class="form-value">{{ candidature.messageCandidat ?? 'N/A' }}</p>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>CV</label>
+                        <p class="form-value">{% if candidature.cv %}<a href="{{ asset('uploads/cv/' ~ candidature.cv) }}" target="_blank">{{ candidature.cv }}</a>{% else %}N/A{% endif %}</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Lettre de motivation</label>
+                        <p class="form-value">{% if candidature.lettreMotivation %}<a href="{{ asset('uploads/lettres/' ~ candidature.lettreMotivation) }}" target="_blank">{{ candidature.lettreMotivation }}</a>{% else %}N/A{% endif %}</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<style>
+    .form-section {
+        padding: 28px;
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .form-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .form-group label {
+        margin-bottom: 10px;
+        font-weight: 700;
+        color: #000;
+        font-size: 1.1rem;
+        text-transform: none;
+        letter-spacing: 0px;
+    }
+
+    .form-value {
+        margin: 0;
+        color: #000;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        word-break: break-word;
+    }
+
+    .form-value a {
+        color: #2563eb;
+        text-decoration: none;
+        border-bottom: 1px solid #2563eb;
+        transition: color 0.2s ease;
+    }
+
+    .form-value a:hover {
+        color: #1d4ed8;
+        border-bottom-color: #1d4ed8;
+    }
+
+    .form-select {
+        padding: 12px 14px;
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        color: #000;
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .form-select:hover {
+        border-color: #94a3b8;
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: #2156d8;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(33, 86, 216, 0.1);
+    }
+
+    .form-select option {
+        background: #fff;
+        color: #000;
+    }
+
+    .inline-form {
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+    }
+
+    .inline-form select {
+        flex: 1;
+    }
+
+    .btn-save,
+    .btn-cancel {
+        padding: 12px 18px;
+        border-radius: 10px;
+        border: 0;
+        cursor: pointer;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #2156d8, #1d4ed8);
+        color: #fff;
+    }
+
+    .btn-save:hover {
+        background: linear-gradient(135deg, #1845b0, #1538c0);
+        box-shadow: 0 4px 12px rgba(33, 86, 216, 0.3);
+    }
+
+    .btn-cancel {
+        background: rgba(148, 163, 184, 0.15);
+        color: #cbd5e1;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(148, 163, 184, 0.25);
+        color: #f1f5f9;
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .inline-form {
+            flex-direction: column;
+        }
+
+        .inline-form select,
+        .btn-save,
+        .btn-cancel {
+            width: 100%;
+        }
+    }
+
+    .table-head h2 {
+        color: #000;
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+</style>
+{% endblock %}

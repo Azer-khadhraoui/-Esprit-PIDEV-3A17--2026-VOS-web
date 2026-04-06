@@ -1,0 +1,116 @@
+{% extends 'gestion_offre_base.html.twig' %}
+
+{% block title %}Gestion Préférences | VOS Admin{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ asset('styles/admin.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="admin-shell">
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-dot"></span>
+            <span>VOS Admin</span>
+        </div>
+        <nav class="nav-list">
+            <a class="nav-item" href="{{ path('app_admin_dashboard') }}">Gestion Users</a>
+            <a class="nav-item" href="{{ path('gestion_offre_dashboard') }}">Gestion Offres</a>
+            <a class="nav-item" href="{{ path('app_admin_candidatures') }}">Gestion Candidatures</a>
+            <a class="nav-item is-active" href="{{ path('app_admin_preferences') }}">Gestion Préférences</a>
+            <a class="nav-item" href="#">Gestion Entretiens</a>
+            <a class="nav-item" href="#">Gestion Recrutements</a>
+            <a class="nav-item" href="#">Forum</a>
+            <a class="nav-item" href="#">Rapports</a>
+        </nav>
+        <div class="sidebar-footer">Panel Administration</div>
+    </aside>
+
+    <main class="content">
+        <header class="topbar">
+            <div>
+                <h1>Gestion Préférences</h1>
+                <p>Bienvenue {{ adminName }}</p>
+            </div>
+            <form method="post" action="{{ path('app_logout') }}">
+                <button class="btn-logout" type="submit">Déconnexion</button>
+            </form>
+        </header>
+
+        <nav class="module-nav" aria-label="Navigation candidatures">
+            <a class="module-link" href="{{ path('app_admin_candidatures') }}">Candidatures</a>
+            <a class="module-link is-active" href="{{ path('app_admin_preferences') }}">Préférences</a>
+        </nav>
+
+        {% for message in app.flashes('error') %}
+            <div class="flash flash-error">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('success') %}
+            <div class="flash flash-success">{{ message }}</div>
+        {% endfor %}
+
+        <section class="table-card">
+            <div class="table-head">
+                <h2>Liste des préférences</h2>
+                <span class="table-badge">{{ preferences|length }} entrées</span>
+            </div>
+
+            <div class="search-filters">
+                <form method="GET" class="filter-form">
+                    <input type="text" name="search" placeholder="Rechercher par nom, prénom ou type de poste..." value="{{ search }}" class="search-input">
+
+                    <select name="sortBy" class="sort-select">
+                        <option value="id_preference" {% if sortBy == 'id_preference' %}selected{% endif %}>Trier par ID</option>
+                        <option value="type_poste_souhaite" {% if sortBy == 'type_poste_souhaite' %}selected{% endif %}>Trier par type</option>
+                        <option value="mode_travail" {% if sortBy == 'mode_travail' %}selected{% endif %}>Trier par mode</option>
+                    </select>
+
+                    <select name="sortOrder" class="sort-select">
+                        <option value="DESC" {% if sortOrder == 'DESC' %}selected{% endif %}>Descendant</option>
+                        <option value="ASC" {% if sortOrder == 'ASC' %}selected{% endif %}>Ascendant</option>
+                    </select>
+
+                    <a href="{{ path('app_admin_preferences') }}" class="btn-reset">Réinitialiser</a>
+                </form>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Utilisateur</th>
+                            <th>Type de Poste</th>
+                            <th>Mode Travail</th>
+                            <th>Disponibilité</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for preference in preferences %}
+                        <tr>
+                            <td>#{{ preference.idPreference }}</td>
+                            <td>{{ preference.idUtilisateur.nom }} {{ preference.idUtilisateur.prenom }}</td>
+                            <td>{{ preference.typePosteSouhaite ?? '-' }}</td>
+                            <td>{{ preference.modeTravail ?? '-' }}</td>
+                            <td>{{ preference.disponibilite|date('d/m/Y') ?? '-' }}</td>
+                            <td>
+                                <div class="actions">
+                                    <a class="btn-edit" href="{{ path('app_admin_preference_edit', {id: preference.idPreference}) }}">Modifier</a>
+                                    <form method="post" action="{{ path('app_admin_preference_delete', {id: preference.idPreference}) }}" onsubmit="return confirm('Supprimer cette préférence ?');" style="display: inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_preference_' ~ preference.idPreference) }}">
+                                        <button class="btn-delete" type="submit">Supprimer</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="6">Aucune préférence trouvée.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+{% endblock %}
