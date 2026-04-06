@@ -20,6 +20,11 @@ class Candidature
     #[Assert\LessThanOrEqual("today", message: "La date ne peut pas être dans le futur.")]
     private ?\DateTime $date_candidature = null;
 
+    public function __construct()
+    {
+        $this->date_candidature = new \DateTime('today');
+    }
+
     #[ORM\Column(length: 50, nullable: true)]
     #[Assert\NotBlank(message: "Le statut est obligatoire.")]
     #[Assert\Choice(
@@ -34,15 +39,13 @@ class Candidature
     private ?string $message_candidat = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Assert\NotBlank(message: "Le CV est obligatoire.")]
-
     private ?string $cv = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Assert\NotBlank(message: "La lettre de motivation est obligatoire.")]
     private ?string $lettre_motivation = null;
 
     #[ORM\Column(length: 50, nullable: true)]
+    #[Assert\NotBlank(message: "Le niveau d'expérience est obligatoire.")]
     #[Assert\Choice(
         choices: ["Débutant", "Junior", "Confirmé", "Senior", "Expert"],
         message: "Niveau d'expérience invalide."
@@ -50,11 +53,13 @@ class Candidature
     private ?string $niveau_experience = null;
 
     #[ORM\Column(nullable: true)]
-     #[Assert\PositiveOrZero(message: "Les années d'expérience doivent être >= 0.")]
+    #[Assert\NotNull(message: "Les années d'expérience sont obligatoires.")]
+    #[Assert\PositiveOrZero(message: "Les années d'expérience doivent être >= 0.")]
     #[Assert\LessThanOrEqual(50, message: "Les années d'expérience semblent incorrectes.")]
     private ?int $annees_experience = null;
 
     #[ORM\Column(length: 100, nullable: true)]
+    #[Assert\NotBlank(message: "Le domaine d'expérience est obligatoire.")]
     #[Assert\Length(max: 100, maxMessage: "Le domaine ne peut pas dépasser 100 caractères.")]
 
     private ?string $domaine_experience = null;

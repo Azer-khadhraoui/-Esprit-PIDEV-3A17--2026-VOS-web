@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes Candidatures | VOS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f7f8fc;
+            --panel: #ffffff;
+            --line: #e8ebf3;
+            --text: #1b2440;
+            --muted: #6c7693;
+            --primary: #4361ee;
+            --success: #16a34a;
+            --danger: #dc2626;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Poppins', 'Segoe UI', sans-serif;
+            background:
+                radial-gradient(1100px 520px at 14% 6%, rgba(67,97,238,0.18), transparent 50%),
+                radial-gradient(1200px 680px at 88% 110%, rgba(67,97,238,0.22), transparent 58%),
+                linear-gradient(180deg, #f9fbff 0%, #eef3ff 100%);
+            color: var(--text);
+            animation: pageFadeIn 0.45s ease;
+        }
+
+        @keyframes pageFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideDownSoft {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes riseIn {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            background: #fff;
+            border-bottom: 1px solid var(--line);
+            position: sticky;
+            top: 0;
+            z-index: 30;
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            gap: 16px;
+            animation: slideDownSoft 0.5s ease;
+        }
+
+        .brand {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+        }
+
+        .nav {
+            display: flex;
+            gap: 24px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .nav a { text-decoration: none; color: inherit; }
+        .nav a.is-active { color: var(--primary); }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .profile-btn {
+            border: 0;
+            border-radius: 999px;
+            padding: 10px 16px;
+            background: var(--primary);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.18s ease, box-shadow 0.2s ease, filter 0.2s ease;
+            box-shadow: 0 8px 18px rgba(67, 97, 238, 0.24);
+        }
+
+        .profile-btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.03);
+        }
+
+        .logout-btn {
+            border: 0;
+            border-radius: 999px;
+            padding: 10px 16px;
+            background: rgba(67, 97, 238, 0.14);
+            color: #1d4ed8;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            transition: transform 0.18s ease, background 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(67, 97, 238, 0.24);
+            transform: translateY(-1px);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 22px auto;
+            padding: 0 18px 26px;
+            animation: riseIn 0.55s ease;
+        }
+
+        h1 {
+            margin: 0 0 14px;
+            font-size: 2.1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .flash {
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .flash.success { background: #dcfce7; color: #166534; }
+        .flash.error { background: #fee2e2; color: #991b1b; }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            gap: 12px;
+        }
+
+        .browse-btn,
+        .btn-candidate {
+            border: 0;
+            border-radius: 999px;
+            padding: 10px 18px;
+            background: #eff6ff;
+            color: #2563eb;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: 'Poppins', sans-serif;
+            box-shadow: inset 0 0 0 1px rgba(37, 99, 235, .15);
+            transition: transform 0.18s ease, filter 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .browse-btn:hover,
+        .btn-candidate:hover {
+            transform: translateY(-1px);
+            filter: brightness(0.98);
+            box-shadow: inset 0 0 0 1px rgba(37, 99, 235, .3);
+        }
+
+        .icon-btn {
+            width: 38px;
+            height: 38px;
+            border: 1px solid rgba(107, 114, 128, 0.25);
+            border-radius: 12px;
+            background: #fff;
+            color: #374151;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.16s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            transform: translateY(-1px);
+            border-color: rgba(37, 99, 235, 0.35);
+            background: #eff6ff;
+        }
+
+        .icon-btn svg {
+            width: 18px;
+            height: 18px;
+            display: block;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 14px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            animation: riseIn 0.55s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+        }
+
+        .card h3 {
+            margin: 0 0 8px;
+            font-size: 1.15rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            width: fit-content;
+            margin-bottom: 10px;
+        }
+
+        .badge.status { background: #e0e7ff; color: #1d4ed8; }
+        .badge.success { background: #dcfce7; color: #166534; }
+        .badge.warning { background: #fef3c7; color: #b45309; }
+        .badge.danger { background: #fee2e2; color: #991b1b; }
+
+        .meta { 
+            display: grid; 
+            gap: 6px; 
+            margin-bottom: 10px;
+            fonts-size: 0.92rem;
+            color: var(--muted);
+        }
+
+        .meta-item { font-size: 0.9rem; }
+        .meta-label { font-weight: 600; color: var(--text); }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            border: 0;
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: var(--danger);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            transition: transform 0.18s ease, filter 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+        }
+
+        .no-candidatures {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px 20px;
+            background: #f9fbff;
+            border-radius: 14px;
+            border: 1px dashed var(--line);
+        }
+
+        .no-candidatures p {
+            margin: 0 0 14px;
+            color: var(--muted);
+            font-size: 1.05rem;
+        }
+
+        @media (max-width: 980px) {
+            .cards { grid-template-columns: 1fr 1fr; }
+            .controls { flex-direction: column; align-items: flex-start; }
+        }
+
+        @media (max-width: 680px) {
+            .nav { display: none; }
+            .cards { grid-template-columns: 1fr; }
+            h1 { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+<header class="header">
+    <div class="header-inner">
+        <div class="brand">VOS</div>
+        <nav class="nav">
+            <a href="{{ path('client_opportunites') }}">Opportunites</a>
+            <a class="is-active" href="{{ path('app_client_candidatures') }}">Mes Candidatures</a>
+        </nav>
+        <div class="header-actions">
+            <a class="profile-btn" href="{{ path('app_client_profile') }}">Mon profil</a>
+            <form method="post" action="{{ path('app_logout') }}" style="margin:0;">
+                <button class="logout-btn" type="submit">Déconnexion</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <h1>Mes Candidatures</h1>
+
+    {% for message in app.flashes('success') %}
+        <div class="flash success">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="flash error">{{ message }}</div>
+    {% endfor %}
+
+    <div class="controls">
+        <div></div>
+        <a class="browse-btn" href="{{ path('client_opportunites') }}">+ Voir les offres</a>
+    </div>
+
+    {% if candidatures is empty %}
+        <div class="cards">
+            <div class="no-candidatures">
+                <p>Vous n'avez pas encore postulé à une offre.</p>
+                <a class="browse-btn" href="{{ path('client_opportunites') }}">Parcourir les offres</a>
+            </div>
+        </div>
+    {% else %}
+        <section class="cards">
+            {% for c in candidatures %}
+                <article class="card">
+                    <h3>{{ offreTitles[c.idOffre] ?? 'Offre #'}}</h3>
+                    <small style="color:var(--muted);">Offre #{{ c.idOffre }}</small>
+                    
+                    <span class="badge {% if c.statut == 'En attente' %}warning{% elseif c.statut == 'Accepté' %}success{% else %}danger{% endif %}">
+                        {{ c.statut ?? 'En attente' }}
+                    </span>
+
+                    <div class="meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Date :</span> {{ c.dateCandidature|date('d/m/Y') }}
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Niveau :</span> {{ c.niveauExperience ?? 'N/A' }}
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Experience :</span> {{ c.anneesExperience }} an(s) — {{ c.domaineExperience ?? 'N/A' }}
+                        </div>
+                        {% if c.dernierPoste %}
+                        <div class="meta-item">
+                            <span class="meta-label">Dernier poste :</span> {{ c.dernierPoste }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if c.messageCandidat %}
+                        <p style="color:#5b647f;line-height:1.35;font-size:0.92rem;margin:8px 0;">
+                            {{ c.messageCandidat|slice(0,100) }}{% if c.messageCandidat|length > 100 %}...{% endif %}
+                        </p>
+                    {% endif %}
+
+                    <div class="actions" style="gap:10px;">
+                        <a href="{{ path('app_client_candidature_detail', {id_candidature: c.idCandidature}) }}" class="btn-candidate">Détails</a>
+                        <a href="{{ path('app_client_candidature_edit', {id_candidature: c.idCandidature}) }}" class="icon-btn" title="Modifier">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" />
+                            </svg>
+                        </a>
+                        <form method="post"
+                              action="{{ path('app_client_candidature_delete', {id_candidature: c.idCandidature}) }}"
+                              onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette candidature ?');"
+                              style="display:inline-flex;">
+                            <input type="hidden" name="_token"
+                                   value="{{ csrf_token('delete' ~ c.idCandidature) }}">
+                            <button type="submit" class="icon-btn" title="Supprimer">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6 18.4 20.6A2 2 0 0 1 16.4 22H7.6A2 2 0 0 1 5.6 20.6L5 6" />
+                                    <path d="M10 11v6" />
+                                    <path d="M14 11v6" />
+                                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                </article>
+            {% endfor %}
+        </section>
+    {% endif %}
+</main>
+
+</body>
+</html>

@@ -1,0 +1,118 @@
+{% extends 'base.html.twig' %}
+{% block title %}Modifier Candidature | VOS{% endblock %}
+
+{% block stylesheets %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('styles/client.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="client-shell">
+    <header class="client-header">
+        <div class="client-header-content">
+            <div class="client-header-brand">
+                <img src="{{ asset('images/logo.png') }}" alt="VOS Logo" class="client-logo-img">
+            </div>
+            <h1>VOS - Modifier Candidature</h1>
+            <div class="client-header-right">
+                <span>Bienvenue {{ userName }}</span>
+                <a class="btn-profile-client" href="{{ path('app_client_candidatures') }}">Mes candidatures</a>
+                <form method="post" action="{{ path('app_logout') }}" class="logout-form">
+                    <button class="btn-logout-client" type="submit">Déconnexion</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <main class="client-content">
+        <section style="max-width:700px; margin:0 auto;">
+            <div class="profile-card">
+                <div class="profile-head">
+                    <h2>Modifier ma Candidature #{{ candidature.idCandidature }}</h2>
+                    <p>Les fichiers actuels sont conservés si vous n'en uploadez pas de nouveaux.</p>
+                </div>
+
+                {{ form_start(form, {attr: {enctype: 'multipart/form-data', class: 'client-profile-form'}}) }}
+
+                    <div class="profile-form-panel" style="margin-bottom:1rem;">
+
+                        {# CV actuel #}
+                        {% if candidature.cv %}
+                        <div style="margin-bottom:0.5rem;">
+                            <small style="color:var(--muted);">CV actuel :
+                                <a href="{{ asset(candidature.cv) }}" target="_blank" style="color:var(--primary);">
+                                    Voir le fichier
+                                </a>
+                            </small>
+                        </div>
+                        {% endif %}
+                        <div>
+                            {{ form_label(form.cv) }} <small style="color:var(--muted);">(laisser vide pour garder l'actuel)</small>
+                            {{ form_widget(form.cv, {attr: {class: 'profile-file-input'}}) }}
+                            {{ form_errors(form.cv) }}
+                        </div>
+
+                        {# Lettre actuelle #}
+                        {% if candidature.lettreMotivation %}
+                        <div style="margin-top:0.5rem;">
+                            <small style="color:var(--muted);">Lettre actuelle :
+                                <a href="{{ asset(candidature.lettreMotivation) }}" target="_blank" style="color:var(--primary);">
+                                    Voir le fichier
+                                </a>
+                            </small>
+                        </div>
+                        {% endif %}
+                        <div>
+                            {{ form_label(form.lettre_motivation) }} <small style="color:var(--muted);">(optionnel)</small>
+                            {{ form_widget(form.lettre_motivation, {attr: {class: 'profile-file-input'}}) }}
+                            {{ form_errors(form.lettre_motivation) }}
+                        </div>
+
+                        <div>
+                            {{ form_label(form.niveau_experience) }}
+                            {{ form_widget(form.niveau_experience) }}
+                            {{ form_errors(form.niveau_experience) }}
+                        </div>
+
+                        <div>
+                            {{ form_label(form.annees_experience) }}
+                            {{ form_widget(form.annees_experience) }}
+                            {{ form_errors(form.annees_experience) }}
+                        </div>
+
+                        <div>
+                            {{ form_label(form.domaine_experience) }}
+                            {{ form_widget(form.domaine_experience) }}
+                            {{ form_errors(form.domaine_experience) }}
+                        </div>
+
+                        <div>
+                            {{ form_label(form.dernier_poste) }}
+                            {{ form_widget(form.dernier_poste) }}
+                            {{ form_errors(form.dernier_poste) }}
+                        </div>
+
+                        <div>
+                            {{ form_label(form.message_candidat) }}
+                            {{ form_widget(form.message_candidat) }}
+                            {{ form_errors(form.message_candidat) }}
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:1rem;">
+                        <button type="submit" class="btn-save-profile" style="flex:1;">
+                            Enregistrer les modifications
+                        </button>
+                        <a href="{{ path('app_client_candidatures') }}"
+                           style="flex:1; text-align:center; padding:0.72rem; border:1px solid var(--line); border-radius:10px; color:var(--muted); text-decoration:none;">
+                            Annuler
+                        </a>
+                    </div>
+
+                {{ form_end(form) }}
+            </div>
+        </section>
+    </main>
+</div>
+{% endblock %}
