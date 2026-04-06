@@ -1,0 +1,291 @@
+{% extends 'gestion_offre_base.html.twig' %}
+
+{% block title %}Modifier Préférence | VOS Admin{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ asset('styles/admin.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="admin-shell">
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-dot"></span>
+            <span>VOS Admin</span>
+        </div>
+        <nav class="nav-list">
+            <a class="nav-item " href="{{ path('app_admin_dashboard') }}">Gestion Users</a>
+            <a class="nav-item" href="{{ path('gestion_offre_dashboard') }}">Gestion Offres</a>
+            <a class="nav-item is-active" href="{{ path('app_admin_candidatures') }}">Gestion Candidatures</a>
+            <a class="nav-item" href="#">Gestion Entretiens</a>
+            <a class="nav-item" href="#">Gestion Recrutements</a>
+            <a class="nav-item" href="#">Forum</a>
+            <a class="nav-item" href="#">Rapports</a>
+        </nav>
+        <div class="sidebar-footer">Panel Administration</div>
+    </aside>
+
+    <main class="content">
+        <header class="topbar">
+            <div>
+                <h1>Modifier Préférence</h1>
+                <p>Bienvenue {{ adminName }}</p>
+            </div>
+            <form method="post" action="{{ path('app_logout') }}">
+                <button class="btn-logout" type="submit">Déconnexion</button>
+            </form>
+        </header>
+
+        {% for message in app.flashes('error') %}
+            <div class="flash flash-error">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('success') %}
+            <div class="flash flash-success">{{ message }}</div>
+        {% endfor %}
+
+        <section class="table-card">
+            <div class="table-head">
+                <h2>Préférence #{{ preference.idPreference }}</h2>
+            </div>
+
+            <div class="form-section">
+                <form method="POST">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Utilisateur</label>
+                            <p class="form-value">
+                                {% if user %}
+                                    {{ user.nom }} {{ user.prenom }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="type_poste">Type de Poste Souhaité</label>
+                            <input type="text" id="type_poste" name="type_poste_souhaite" value="{{ preference.typePosteSouhaite ?? '' }}" class="form-input">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="mode_travail">Mode de Travail</label>
+                            <select id="mode_travail" name="mode_travail" class="form-select">
+                                <option value="">-- Sélectionnez --</option>
+                                <option value="100% Présentiel" {% if preference.modeTravail == '100% Présentiel' %}selected{% endif %}>100% Présentiel</option>
+                                <option value="100% Télétravail" {% if preference.modeTravail == '100% Télétravail' %}selected{% endif %}>100% Télétravail</option>
+                                <option value="Hybride" {% if preference.modeTravail == 'Hybride' %}selected{% endif %}>Hybride</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="disponibilite">Disponibilité</label>
+                            <select id="disponibilite" name="disponibilite" class="form-select">
+                                <option value="">-- Sélectionnez --</option>
+                                <option value="Immédiatement" {% if preference.disponibilite == 'Immédiatement' %}selected{% endif %}>Immédiatement</option>
+                                <option value="Dans 1 mois" {% if preference.disponibilite == 'Dans 1 mois' %}selected{% endif %}>Dans 1 mois</option>
+                                <option value="Dans 3 mois" {% if preference.disponibilite == 'Dans 3 mois' %}selected{% endif %}>Dans 3 mois</option>
+                                <option value="Dans 6 mois" {% if preference.disponibilite == 'Dans 6 mois' %}selected{% endif %}>Dans 6 mois</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="date_disponibilite">Date de Disponibilité</label>
+                            <input type="date" id="date_disponibilite" name="date_disponibilite" value="{{ preference.dateDisponibilite ? preference.dateDisponibilite|date('Y-m-d') : '' }}" class="form-input">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="mobilite">Mobilité Géographique</label>
+                            <select id="mobilite" name="mobilite_geographique" class="form-select">
+                                <option value="">-- Sélectionnez --</option>
+                                <option value="Oui, national" {% if preference.mobiliteGeographique == 'Oui, national' %}selected{% endif %}>Oui, national</option>
+                                <option value="Oui, région" {% if preference.mobiliteGeographique == 'Oui, région' %}selected{% endif %}>Oui, région</option>
+                                <option value="Non" {% if preference.mobiliteGeographique == 'Non' %}selected{% endif %}>Non</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="pret_deplacement">Prêt au Déplacement</label>
+                            <select id="pret_deplacement" name="pret_deplacement" class="form-select">
+                                <option value="">-- Sélectionnez --</option>
+                                <option value="Jamais" {% if preference.pretDeplacement == 'Jamais' %}selected{% endif %}>Jamais</option>
+                                <option value="Occasionnel" {% if preference.pretDeplacement == 'Occasionnel' %}selected{% endif %}>Occasionnel</option>
+                                <option value="Fréquent" {% if preference.pretDeplacement == 'Fréquent' %}selected{% endif %}>Fréquent</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="type_contrat">Type de Contrat Souhaité</label>
+                            <select id="type_contrat" name="type_contrat_souhaite" class="form-select">
+                                <option value="">-- Sélectionnez --</option>
+                                <option value="CDI" {% if preference.typeContratSouhaite == 'CDI' %}selected{% endif %}>CDI</option>
+                                <option value="CDD" {% if preference.typeContratSouhaite == 'CDD' %}selected{% endif %}>CDD</option>
+                                <option value="Stage" {% if preference.typeContratSouhaite == 'Stage' %}selected{% endif %}>Stage</option>
+                                <option value="Alternance" {% if preference.typeContratSouhaite == 'Alternance' %}selected{% endif %}>Alternance</option>
+                                <option value="Freelance" {% if preference.typeContratSouhaite == 'Freelance' %}selected{% endif %}>Freelance</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-save">Enregistrer</button>
+                        <a href="{{ path('app_admin_preferences') }}" class="btn-cancel">Annuler</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+</div>
+
+<style>
+    .form-section {
+        padding: 28px;
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .form-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .form-group label {
+        margin-bottom: 10px;
+        font-weight: 700;
+        color: #000;
+        font-size: 0.95rem;
+        text-transform: none;
+        letter-spacing: 0px;
+    }
+
+    .form-value {
+        margin: 0;
+        color: #000;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        word-break: break-word;
+    }
+
+    .form-input,
+    .form-select {
+        padding: 12px 14px;
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        color: #000;
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-input::placeholder {
+        color: #94a3b8;
+    }
+
+    .form-input:hover,
+    .form-select:hover {
+        border-color: #94a3b8;
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+        outline: none;
+        border-color: #2156d8;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(33, 86, 216, 0.1);
+    }
+
+    .form-select {
+        cursor: pointer;
+    }
+
+    .form-select option {
+        background: #fff;
+        color: #000;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 28px;
+        padding-top: 28px;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .btn-save,
+    .btn-cancel {
+        flex: 1;
+        padding: 12px 18px;
+        border-radius: 10px;
+        border: 0;
+        cursor: pointer;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #2156d8, #1d4ed8);
+        color: #fff;
+    }
+
+    .btn-save:hover {
+        background: linear-gradient(135deg, #1845b0, #1538c0);
+        box-shadow: 0 4px 12px rgba(33, 86, 216, 0.3);
+    }
+
+    .btn-cancel {
+        background: rgba(148, 163, 184, 0.15);
+        color: #64748b;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(148, 163, 184, 0.25);
+        color: #334155;
+    }
+
+    .table-head h2 {
+        color: #000;
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn-save,
+        .btn-cancel {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}

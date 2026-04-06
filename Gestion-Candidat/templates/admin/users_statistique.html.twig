@@ -1,0 +1,228 @@
+{% extends 'gestion_offre_base.html.twig' %}
+
+{% block title %}Statistiques Utilisateurs | VOS{% endblock %}
+
+{% block styles %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('styles/admin.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="admin-shell">
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-dot"></span>
+            <span>VOS Admin</span>
+        </div>
+        <nav class="nav-list">
+            <a class="nav-item is-active" href="{{ path('app_admin_dashboard') }}">Gestion Users</a>
+            <a class="nav-item" href="{{ path('gestion_offre_dashboard') }}">Gestion Offres</a>
+            <a class="nav-item" href="{{ path('app_admin_candidatures') }}">Gestion Candidatures</a>
+            <a class="nav-item" href="#">Gestion Entretiens</a>
+            <a class="nav-item" href="#">Gestion Recrutements</a>
+            <a class="nav-item" href="#">Forum</a>
+            <a class="nav-item" href="#">Rapports</a>
+        </nav>
+        <div class="sidebar-footer">Panel Administration</div>
+    </aside>
+
+    <main class="content">
+        <header class="topbar">
+            <div>
+                <h1>Statistique Utilisateurs</h1>
+                <p>Bienvenue {{ adminName }}</p>
+            </div>
+            <form method="post" action="{{ path('app_logout') }}">
+                <button class="btn-logout" type="submit">Déconnexion</button>
+            </form>
+        </header>
+
+        <nav class="module-nav" aria-label="Navigation utilisateurs">
+            <a class="module-link" href="{{ path('app_admin_dashboard') }}">Utilisateurs</a>
+            <a class="module-link is-active" href="{{ path('app_admin_users_statistique') }}">Statistiques</a>
+        </nav>
+
+        <section class="stats-grid">
+            <article class="stat-card stat-total">
+                <h3>Total utilisateurs</h3>
+                <p>{{ stats.total }}</p>
+            </article>
+            <article class="stat-card stat-admins">
+                <h3>Administrateurs</h3>
+                <p>{{ stats.admins }}</p>
+            </article>
+            <article class="stat-card stat-clients">
+                <h3>Clients</h3>
+                <p>{{ stats.clients }}</p>
+            </article>
+        </section>
+
+        <section style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start;">
+            <article class="table-card" style="padding:16px;">
+                <div style="font-weight:700;margin-bottom:10px;">Répartition des rôles</div>
+                <svg id="rolesPieChart" viewBox="0 0 380 260" width="100%" height="260" role="img" aria-label="Graphique circulaire des rôles"></svg>
+            </article>
+
+            <article class="table-card" style="padding:16px;">
+                <div style="font-weight:700;margin-bottom:10px;">Nombre par rôle</div>
+                <svg id="rolesBarChart" viewBox="0 0 520 260" width="100%" height="260" role="img" aria-label="Graphique en barres des rôles"></svg>
+            </article>
+        </section>
+    </main>
+</div>
+
+<script>
+    (function () {
+        const labels = {{ roleStats|map(s => s.label)|json_encode|raw }};
+        const values = {{ roleStats|map(s => s.total)|json_encode|raw }};
+        const palette = ['#2563eb', '#16a34a', '#f59e0b', '#dc2626', '#7c3aed', '#0ea5e9', '#334155'];
+        const svgNs = 'http://www.w3.org/2000/svg';
+
+        function clearSvg(svg) {
+            while (svg.firstChild) {
+                svg.removeChild(svg.firstChild);
+            }
+        }
+
+        function polarToCartesian(cx, cy, r, angleRad) {
+            return {
+                x: cx + r * Math.cos(angleRad),
+                y: cy + r * Math.sin(angleRad)
+            };
+        }
+
+        function renderPieChart(svgId, labels, values) {
+            const svg = document.getElementById(svgId);
+            if (!svg) return;
+            clearSvg(svg);
+
+            const total = values.reduce((acc, value) => acc + Number(value || 0), 0);
+            if (total <= 0) {
+                const text = document.createElementNS(svgNs, 'text');
+                text.setAttribute('x', '50%');
+                text.setAttribute('y', '50%');
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', '#64748b');
+                text.textContent = 'Aucune donnée';
+                svg.appendChild(text);
+                return;
+            }
+
+            const cx = 130;
+            const cy = 130;
+            const outer = 88;
+            let start = -Math.PI / 2;
+
+            values.forEach((rawValue, index) => {
+                const value = Number(rawValue || 0);
+                if (value <= 0) return;
+                const angle = (value / total) * Math.PI * 2;
+                const end = start + angle;
+
+                const outerStart = polarToCartesian(cx, cy, outer, start);
+                const outerEnd = polarToCartesian(cx, cy, outer, end);
+                const largeArc = angle > Math.PI ? 1 : 0;
+
+                const d = [
+                    `M ${cx} ${cy}`,
+                    `L ${outerStart.x} ${outerStart.y}`,
+                    `A ${outer} ${outer} 0 ${largeArc} 1 ${outerEnd.x} ${outerEnd.y}`,
+                    'Z'
+                ].join(' ');
+
+                const path = document.createElementNS(svgNs, 'path');
+                path.setAttribute('d', d);
+                path.setAttribute('fill', palette[index % palette.length]);
+                path.setAttribute('stroke', '#ffffff');
+                path.setAttribute('stroke-width', '1');
+                svg.appendChild(path);
+
+                start = end;
+            });
+
+            labels.forEach((label, index) => {
+                const y = 28 + (index * 22);
+                const swatch = document.createElementNS(svgNs, 'rect');
+                swatch.setAttribute('x', '250');
+                swatch.setAttribute('y', String(y - 10));
+                swatch.setAttribute('width', '12');
+                swatch.setAttribute('height', '12');
+                swatch.setAttribute('rx', '2');
+                swatch.setAttribute('fill', palette[index % palette.length]);
+                svg.appendChild(swatch);
+
+                const txt = document.createElementNS(svgNs, 'text');
+                txt.setAttribute('x', '268');
+                txt.setAttribute('y', String(y));
+                txt.setAttribute('fill', '#334155');
+                txt.setAttribute('font-size', '12');
+                txt.textContent = `${label} (${values[index] ?? 0})`;
+                svg.appendChild(txt);
+            });
+        }
+
+        function renderBarChart(svgId, labels, values) {
+            const svg = document.getElementById(svgId);
+            if (!svg) return;
+            clearSvg(svg);
+
+            const max = Math.max(...values.map((value) => Number(value || 0)), 0);
+            if (max <= 0) {
+                const text = document.createElementNS(svgNs, 'text');
+                text.setAttribute('x', '50%');
+                text.setAttribute('y', '50%');
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', '#64748b');
+                text.textContent = 'Aucune donnée';
+                svg.appendChild(text);
+                return;
+            }
+
+            const chartX = 30;
+            const chartY = 20;
+            const chartH = 180;
+            const slotW = Math.max(70, Math.floor(420 / Math.max(1, labels.length)));
+            const barW = Math.min(42, Math.floor(slotW * 0.58));
+
+            labels.forEach((label, index) => {
+                const value = Number(values[index] || 0);
+                const h = (value / max) * chartH;
+                const x = chartX + (index * slotW);
+                const y = chartY + (chartH - h);
+
+                const bar = document.createElementNS(svgNs, 'rect');
+                bar.setAttribute('x', String(x));
+                bar.setAttribute('y', String(y));
+                bar.setAttribute('width', String(barW));
+                bar.setAttribute('height', String(h));
+                bar.setAttribute('rx', '8');
+                bar.setAttribute('fill', '#1d4ed8');
+                svg.appendChild(bar);
+
+                const val = document.createElementNS(svgNs, 'text');
+                val.setAttribute('x', String(x + (barW / 2)));
+                val.setAttribute('y', String(y - 6));
+                val.setAttribute('text-anchor', 'middle');
+                val.setAttribute('fill', '#334155');
+                val.setAttribute('font-size', '12');
+                val.textContent = String(value);
+                svg.appendChild(val);
+
+                const lbl = document.createElementNS(svgNs, 'text');
+                lbl.setAttribute('x', String(x + (barW / 2)));
+                lbl.setAttribute('y', '225');
+                lbl.setAttribute('text-anchor', 'middle');
+                lbl.setAttribute('fill', '#334155');
+                lbl.setAttribute('font-size', '11');
+                lbl.textContent = label;
+                svg.appendChild(lbl);
+            });
+        }
+
+        renderPieChart('rolesPieChart', labels, values);
+        renderBarChart('rolesBarChart', labels, values);
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends 'gestion_offre_base.html.twig' %}
+
+{% block title %}Gestion Candidatures | VOS Admin{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ asset('styles/admin.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="admin-shell">
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-dot"></span>
+            <span>VOS Admin</span>
+        </div>
+        <nav class="nav-list">
+            <a class="nav-item " href="{{ path('app_admin_dashboard') }}">Gestion Users</a>
+            <a class="nav-item" href="{{ path('gestion_offre_dashboard') }}">Gestion Offres</a>
+            <a class="nav-item is-active" href="{{ path('app_admin_candidatures') }}">Gestion Candidatures</a>
+            <a class="nav-item" href="#">Gestion Entretiens</a>
+            <a class="nav-item" href="#">Gestion Recrutements</a>
+            <a class="nav-item" href="#">Forum</a>
+            <a class="nav-item" href="#">Rapports</a>
+        </nav>
+        <div class="sidebar-footer">Panel Administration</div>
+    </aside>
+
+    <main class="content">
+        <header class="topbar">
+            <div>
+                <h1>Gestion Candidatures</h1>
+                <p>Bienvenue {{ adminName }}</p>
+            </div>
+            <form method="post" action="{{ path('app_logout') }}">
+                <button class="btn-logout" type="submit">Déconnexion</button>
+            </form>
+        </header>
+
+        <nav class="module-nav" aria-label="Navigation candidatures">
+            <a class="module-link is-active" href="{{ path('app_admin_candidatures') }}">Candidatures</a>
+            <a class="module-link" href="{{ path('app_admin_preferences') }}">Préférences</a>
+        </nav>
+
+        {% for message in app.flashes('error') %}
+            <div class="flash flash-error">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('success') %}
+            <div class="flash flash-success">{{ message }}</div>
+        {% endfor %}
+
+        <section class="table-card">
+            <div class="table-head">
+                <h2>Liste des candidatures</h2>
+                <span class="table-badge">{{ candidatures|length }} entrées</span>
+            </div>
+
+            <div class="search-filters">
+                <form method="GET" class="filter-form">
+                    <input type="text" name="search" placeholder="Rechercher par nom, prénom ou offre..." value="{{ search }}" class="search-input">
+
+                    <select name="sortBy" class="sort-select">
+                        <option value="id_candidature" {% if sortBy == 'id_candidature' %}selected{% endif %}>Trier par ID</option>
+                        <option value="date_candidature" {% if sortBy == 'date_candidature' %}selected{% endif %}>Trier par date</option>
+                        <option value="statut" {% if sortBy == 'statut' %}selected{% endif %}>Trier par statut</option>
+                    </select>
+
+                    <select name="sortOrder" class="sort-select">
+                        <option value="DESC" {% if sortOrder == 'DESC' %}selected{% endif %}>Descendant</option>
+                        <option value="ASC" {% if sortOrder == 'ASC' %}selected{% endif %}>Ascendant</option>
+                    </select>
+
+                    <a href="{{ path('app_admin_candidatures') }}" class="btn-reset">Réinitialiser</a>
+                </form>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Candidat</th>
+                            <th>Offre</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for candidature in candidatures %}
+                        <tr>
+                            <td>#{{ candidature.idCandidature }}</td>
+                            <td>{% if users[candidature.idUtilisateur] %}{{ users[candidature.idUtilisateur].nom }} {{ users[candidature.idUtilisateur].prenom }}{% else %}N/A{% endif %}</td>
+                            <td>{% if offres[candidature.idOffre] %}{{ offres[candidature.idOffre].titre }}{% else %}N/A{% endif %}</td>
+                            <td>{{ candidature.dateCandidature|date('d/m/Y') }}</td>
+                            <td><span class="role-chip">{{ candidature.statut }}</span></td>
+                            <td>
+                                <div class="actions">
+                                    <a class="btn-edit" href="{{ path('app_admin_candidature_edit', {id: candidature.idCandidature}) }}">Modifier</a>
+                                    <form method="post" action="{{ path('app_admin_candidature_delete', {id: candidature.idCandidature}) }}" onsubmit="return confirm('Supprimer cette candidature ?');" style="display: inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_candidature_' ~ candidature.idCandidature) }}">
+                                        <button class="btn-delete" type="submit">Supprimer</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="6">Aucune candidature trouvée.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+{% endblock %}
