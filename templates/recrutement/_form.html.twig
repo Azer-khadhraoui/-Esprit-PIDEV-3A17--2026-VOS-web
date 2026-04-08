@@ -1,0 +1,34 @@
+<form method="post">
+    {{ form_start(form) }}
+    <div class="form-grid">
+        <div class="form-group">
+            {{ form_label(form.dateDecision) }}
+            {{ form_widget(form.dateDecision) }}
+            {{ form_errors(form.dateDecision) }}
+        </div>
+
+        <div class="form-group">
+            {{ form_label(form.decisionFinale) }}
+            {{ form_widget(form.decisionFinale) }}
+            {{ form_errors(form.decisionFinale) }}
+        </div>
+
+        <div class="form-group">
+            {{ form_label(form.idEntretien) }}
+            {{ form_widget(form.idEntretien) }}
+            {{ form_errors(form.idEntretien) }}
+        </div>
+
+        <div class="form-group">
+            {{ form_label(form.idUtilisateur) }}
+            {{ form_widget(form.idUtilisateur) }}
+            {{ form_errors(form.idUtilisateur) }}
+        </div>
+    </div>
+
+    <div class="form-actions">
+        {{ form_widget(form.save, {'attr': {'class': 'btn-save'}}) }}
+        <a href="{{ path('recrutement_index') }}" class="btn-delete">Annuler</a>
+    </div>
+    {{ form_end(form) }}
+</form>
