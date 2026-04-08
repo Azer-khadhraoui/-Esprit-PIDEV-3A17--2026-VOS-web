@@ -31,6 +31,13 @@
             <a class="module-link is-active" href="{{ path('contrat_embauche_index') }}">Contrats</a>
         </div>
 
+        {% for message in app.flashes('success') %}
+            <div class="flash flash-success">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="flash flash-error">{{ message }}</div>
+        {% endfor %}
+
         <section class="table-card">
             <div class="table-head">
                 <h2>Contrats d'embauche</h2>
@@ -44,6 +51,7 @@
                             <th>Type</th>
                             <th>Début</th>
                             <th>Fin</th>
+                            <th>Période</th>
                             <th>Salaire</th>
                             <th>Statut</th>
                             <th>Action</th>
@@ -56,6 +64,7 @@
                                 <td>{{ contrat.typeContrat }}</td>
                                 <td>{{ contrat.dateDebut ? contrat.dateDebut|date('d/m/Y') : '-' }}</td>
                                 <td>{{ contrat.dateFin ? contrat.dateFin|date('d/m/Y') : '-' }}</td>
+                                <td>{{ contrat.periode ?: '-' }}</td>
                                 <td>{{ contrat.salaire }}</td>
                                 <td>{{ contrat.status }}</td>
                                 <td>

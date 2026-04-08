@@ -19,13 +19,12 @@ class ContratEmbauche
     private ?string $typeContrat = null;
 
     #[ORM\Column(name: 'date_debut', type: 'date')]
-    #[Assert\NotBlank(message: 'La date de début est requise.')]
-    #[Assert\Date(message: 'La date doit être valide.')]
+    #[Assert\NotNull(message: 'La date de début est requise.')]
+    #[Assert\GreaterThanOrEqual('today', message: 'La date de début ne peut pas être antérieure à aujourd\'hui.')]
     private ?\DateTimeInterface $dateDebut = null;
 
     #[ORM\Column(name: 'date_fin', type: 'date')]
-    #[Assert\NotBlank(message: 'La date de fin est requise.')]
-    #[Assert\Date(message: 'La date doit être valide.')]
+    #[Assert\NotNull(message: 'La date de fin est requise.')]
     private ?\DateTimeInterface $dateFin = null;
 
     #[ORM\Column(name: 'salaire', type: 'float')]
@@ -49,8 +48,7 @@ class ContratEmbauche
     #[Assert\Positive(message: "L'ID du recrutement doit être positif.")]
     private ?int $idRecrutement = null;
 
-    #[ORM\Column(name: 'periode', type: 'string', length: 50)]
-    #[Assert\NotBlank(message: 'La période est requise.')]
+    #[ORM\Column(name: 'periode', type: 'string', length: 50, nullable: true)]
     private ?string $periode = null;
 
     public function getId(): ?int
@@ -75,7 +73,7 @@ class ContratEmbauche
         return $this->dateDebut;
     }
 
-    public function setDateDebut(\DateTimeInterface $dateDebut): self
+    public function setDateDebut(?\DateTimeInterface $dateDebut): self
     {
         $this->dateDebut = $dateDebut;
 
@@ -87,7 +85,7 @@ class ContratEmbauche
         return $this->dateFin;
     }
 
-    public function setDateFin(\DateTimeInterface $dateFin): self
+    public function setDateFin(?\DateTimeInterface $dateFin): self
     {
         $this->dateFin = $dateFin;
 
@@ -156,10 +154,14 @@ class ContratEmbauche
 
     public function getPeriode(): ?string
     {
-        return $this->periode;
+        if ($this->dateDebut && $this->dateFin) {
+            $interval = $this->dateDebut->diff($this->dateFin);
+            return $interval->format('%a jours');
+        }
+        return null;
     }
 
-    public function setPeriode(string $periode): self
+    public function setPeriode(?string $periode): self
     {
         $this->periode = $periode;
 
