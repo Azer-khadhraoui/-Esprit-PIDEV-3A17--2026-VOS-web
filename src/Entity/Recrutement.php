@@ -5,48 +5,36 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="recrutement")
- */
+#[ORM\Entity]
+#[ORM\Table(name: 'recrutement')]
 class Recrutement
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(name: 'id_recrutement', type: 'integer')]
     private ?int $id = null;
 
-    /**
-     * @ORM\Column(type="date")
-     * @Assert\NotBlank(message="La date de décision est requise.")
-     * @Assert\Date(message="La date doit être valide.")
-     */
+    #[ORM\Column(name: 'date_decision', type: 'date')]
+    #[Assert\NotBlank(message: 'La date de décision est requise.')]
+    #[Assert\Date(message: 'La date doit être valide.')]
     private ?\DateTimeInterface $dateDecision = null;
 
-    /**
-     * @ORM\Column(type="string", length=50)
-     * @Assert\NotBlank(message="La décision finale est requise.")
-     * @Assert\Length(
-     *      max=50,
-     *      maxMessage="La décision finale ne peut pas dépasser {{ limit }} caractères."
-     * )
-     */
+    #[ORM\Column(name: 'decision_finale', type: 'string', length: 50)]
+    #[Assert\NotBlank(message: 'La décision finale est requise.')]
+    #[Assert\Length(
+        max: 50,
+        maxMessage: 'La décision finale ne peut pas dépasser {{ limit }} caractères.'
+    )]
     private ?string $decisionFinale = null;
 
-    /**
-     * @ORM\Column(type="integer")
-     * @Assert\NotBlank(message="L'identifiant de l'entretien est requis.")
-     * @Assert\Positive(message="L'identifiant de l'entretien doit être un nombre positif.")
-     */
+    #[ORM\Column(name: 'id_entretien', type: 'integer')]
+    #[Assert\NotBlank(message: "L'identifiant de l'entretien est requis.")]
+    #[Assert\Positive(message: "L'identifiant de l'entretien doit être un nombre positif.")]
     private ?int $idEntretien = null;
 
-    /**
-     * @ORM\Column(type="integer")
-     * @Assert\NotBlank(message="L'identifiant de l'utilisateur est requis.")
-     * @Assert\Positive(message="L'identifiant de l'utilisateur doit être un nombre positif.")
-     */
+    #[ORM\Column(name: 'id_utilisateur', type: 'integer')]
+    #[Assert\NotBlank(message: "L'identifiant de l'utilisateur est requis.")]
+    #[Assert\Positive(message: "L'identifiant de l'utilisateur doit être un nombre positif.")]
     private ?int $idUtilisateur = null;
 
     public function getId(): ?int

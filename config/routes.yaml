@@ -47,6 +47,23 @@ recrutement_delete:
   methods: [POST]
   controller: App\Controller\RecrutementController::delete
 
+contrat_embauche_index:
+  path: /admin/contrats
+  controller: App\Controller\ContratEmbaucheController::index
+
+contrat_embauche_new:
+  path: /admin/contrats/new
+  controller: App\Controller\ContratEmbaucheController::new
+
+contrat_embauche_edit:
+  path: /admin/contrats/{id}/edit
+  controller: App\Controller\ContratEmbaucheController::edit
+
+contrat_embauche_delete:
+  path: /admin/contrats/{id}/delete
+  methods: [POST]
+  controller: App\Controller\ContratEmbaucheController::delete
+
 app_logout:
   path: /admin/logout
   methods: [POST]

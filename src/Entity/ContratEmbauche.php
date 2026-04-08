@@ -5,74 +5,52 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
-/**
- * @ORM\Entity
- * @ORM\Table(name="contrat_embauche")
- */
+#[ORM\Entity]
+#[ORM\Table(name: 'contrat_embauche')]
 class ContratEmbauche
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(name: 'id_contrat', type: 'integer')]
     private ?int $id = null;
 
-    /**
-     * @ORM\Column(type="string", length=50)
-     * @Assert\NotBlank(message="Le type de contrat est requis.")
-     */
+    #[ORM\Column(name: 'type_contrat', type: 'string', length: 50)]
+    #[Assert\NotBlank(message: 'Le type de contrat est requis.')]
     private ?string $typeContrat = null;
 
-    /**
-     * @ORM\Column(type="date")
-     * @Assert\NotBlank(message="La date de début est requise.")
-     * @Assert\Date(message="La date doit être valide.")
-     */
+    #[ORM\Column(name: 'date_debut', type: 'date')]
+    #[Assert\NotBlank(message: 'La date de début est requise.')]
+    #[Assert\Date(message: 'La date doit être valide.')]
     private ?\DateTimeInterface $dateDebut = null;
 
-    /**
-     * @ORM\Column(type="date")
-     * @Assert\NotBlank(message="La date de fin est requise.")
-     * @Assert\Date(message="La date doit être valide.")
-     */
+    #[ORM\Column(name: 'date_fin', type: 'date')]
+    #[Assert\NotBlank(message: 'La date de fin est requise.')]
+    #[Assert\Date(message: 'La date doit être valide.')]
     private ?\DateTimeInterface $dateFin = null;
 
-    /**
-     * @ORM\Column(type="float")
-     * @Assert\NotBlank(message="Le salaire est requis.")
-     * @Assert\Positive(message="Le salaire doit être un nombre positif.")
-     */
+    #[ORM\Column(name: 'salaire', type: 'float')]
+    #[Assert\NotBlank(message: 'Le salaire est requis.')]
+    #[Assert\Positive(message: 'Le salaire doit être un nombre positif.')]
     private ?float $salaire = null;
 
-    /**
-     * @ORM\Column(type="string", length=50)
-     * @Assert\NotBlank(message="Le statut est requis.")
-     */
+    #[ORM\Column(name: 'status', type: 'string', length: 50)]
+    #[Assert\NotBlank(message: 'Le statut est requis.')]
     private ?string $status = null;
 
-    /**
-     * @ORM\Column(type="string", length=20)
-     * @Assert\NotBlank(message="Le volume horaire est requis.")
-     */
+    #[ORM\Column(name: 'volume_horaire', type: 'string', length: 20)]
+    #[Assert\NotBlank(message: 'Le volume horaire est requis.')]
     private ?string $volumeHoraire = null;
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
+    #[ORM\Column(name: 'avantages', type: 'text', nullable: true)]
     private ?string $avantages = null;
 
-    /**
-     * @ORM\Column(type="integer")
-     * @Assert\NotBlank(message="L'ID du recrutement est requis.")
-     * @Assert\Positive(message="L'ID du recrutement doit être positif.")
-     */
+    #[ORM\Column(name: 'id_recrutement', type: 'integer')]
+    #[Assert\NotBlank(message: "L'ID du recrutement est requis.")]
+    #[Assert\Positive(message: "L'ID du recrutement doit être positif.")]
     private ?int $idRecrutement = null;
 
-    /**
-     * @ORM\Column(type="string", length=50)
-     * @Assert\NotBlank(message="La période est requise.")
-     */
+    #[ORM\Column(name: 'periode', type: 'string', length: 50)]
+    #[Assert\NotBlank(message: 'La période est requise.')]
     private ?string $periode = null;
 
     public function getId(): ?int
