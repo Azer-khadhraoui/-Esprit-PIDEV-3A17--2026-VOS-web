@@ -10,8 +10,7 @@
             <span>VOS Admin</span>
         </div>
         <nav class="nav-list">
-            <a class="nav-item" href="{{ path('recrutement_index') }}">Gestion Recrutements</a>
-            <a class="nav-item" href="{{ path('contrat_embauche_index') }}">Gestion Contrats Embauche</a>
+            <a class="nav-item is-active" href="{{ path('recrutement_index') }}">Gestion Recrutements</a>
             <a class="nav-item" href="{{ path('app_admin_forum') }}">Forum</a>
             <a class="nav-item" href="{{ path('app_admin_reports') }}">Rapports</a>
         </nav>
@@ -26,6 +25,11 @@
             </div>
             <a href="{{ path('recrutement_new') }}" class="btn-logout">Nouveau recrutement</a>
         </header>
+
+        <div class="module-nav">
+            <a class="module-link is-active" href="{{ path('recrutement_index') }}">Recrutements</a>
+            <a class="module-link" href="{{ path('contrat_embauche_index') }}">Contrats</a>
+        </div>
 
         {% for message in app.flashes('success') %}
             <div class="flash flash-success">{{ message }}</div>

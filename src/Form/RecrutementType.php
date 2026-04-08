@@ -5,6 +5,7 @@ namespace App\Form;
 use App\Entity\Recrutement;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -19,18 +20,29 @@ class RecrutementType extends AbstractType
             ->add('dateDecision', DateType::class, [
                 'widget' => 'single_text',
                 'label' => 'Date de décision',
-                'attr' => ['placeholder' => 'YYYY-MM-DD'],
+                'required' => false,
+                'attr' => [
+                    'placeholder' => 'YYYY-MM-DD',
+                ],
             ])
-            ->add('decisionFinale', TextType::class, [
+            ->add('decisionFinale', ChoiceType::class, [
                 'label' => 'Décision finale',
-                'attr' => ['placeholder' => 'Accepté, Refusé, En attente...'],
+                'required' => false,
+                'choices' => [
+                    'En attente' => 'En attente',
+                    'Accepté' => 'Accepté',
+                    'Refusé' => 'Refusé',
+                ],
+                'placeholder' => 'Choisir une décision',
             ])
             ->add('idEntretien', IntegerType::class, [
                 'label' => 'ID Entretien',
+                'required' => false,
                 'attr' => ['placeholder' => 'Identifiant de l’entretien'],
             ])
             ->add('idUtilisateur', IntegerType::class, [
                 'label' => 'ID Utilisateur',
+                'required' => false,
                 'attr' => ['placeholder' => 'Identifiant de l’utilisateur'],
             ])
             ->add('save', SubmitType::class, [

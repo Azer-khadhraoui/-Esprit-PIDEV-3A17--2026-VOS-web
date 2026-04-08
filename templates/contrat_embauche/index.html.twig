@@ -11,7 +11,6 @@
         </div>
         <nav class="nav-list">
             <a class="nav-item" href="{{ path('recrutement_index') }}">Gestion Recrutements</a>
-            <a class="nav-item is-active" href="{{ path('contrat_embauche_index') }}">Gestion Contrats Embauche</a>
             <a class="nav-item" href="{{ path('app_admin_forum') }}">Forum</a>
             <a class="nav-item" href="{{ path('app_admin_reports') }}">Rapports</a>
         </nav>
@@ -26,6 +25,11 @@
             </div>
             <a href="{{ path('contrat_embauche_new') }}" class="btn-logout">Nouveau contrat</a>
         </header>
+
+        <div class="module-nav">
+            <a class="module-link" href="{{ path('recrutement_index') }}">Recrutements</a>
+            <a class="module-link is-active" href="{{ path('contrat_embauche_index') }}">Contrats</a>
+        </div>
 
         <section class="table-card">
             <div class="table-head">

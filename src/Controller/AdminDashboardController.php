@@ -26,7 +26,13 @@ class AdminDashboardController extends AbstractController
 
     public function entretiens(Request $request): Response
     {
-        return $this->renderDashboard('Dashboard Entretiens', $request);
+        return $this->render('admin/entretiens.html.twig', [
+            'adminName' => 'Khadhraoui Azer',
+            'search' => $request->query->get('search', ''),
+            'typeFilter' => $request->query->get('type', ''),
+            'statutFilter' => $request->query->get('statut', ''),
+            'entretiens' => $this->getSampleEntretiens(),
+        ]);
     }
 
     public function recrutements(Request $request): Response
@@ -78,6 +84,15 @@ class AdminDashboardController extends AbstractController
             ['id' => 101, 'imageProfil' => null, 'nom' => 'Ben Salah', 'prenom' => 'Maha', 'email' => 'maha.bensalah@example.com', 'role' => 'ADMIN_RH'],
             ['id' => 102, 'imageProfil' => null, 'nom' => 'Trabelsi', 'prenom' => 'Nizar', 'email' => 'nizar.trabelsi@example.com', 'role' => 'CLIENT'],
             ['id' => 103, 'imageProfil' => null, 'nom' => 'Saidi', 'prenom' => 'Amina', 'email' => 'amina.saidi@example.com', 'role' => 'ADMIN_TECHNIQUE'],
+        ];
+    }
+
+    private function getSampleEntretiens(): array
+    {
+        return [
+            ['id' => 13, 'date' => '05/04/2026', 'heure' => '15:35', 'type' => 'Technique', 'testType' => 'diagnostic', 'statut' => 'Terminé', 'lieu' => 'en ligne'],
+            ['id' => 10, 'date' => '14/03/2026', 'heure' => '10:00', 'type' => 'RH', 'testType' => 'rh', 'statut' => 'Terminé', 'lieu' => 'en ligne'],
+            ['id' => 11, 'date' => '05/03/2026', 'heure' => '10:00', 'type' => 'RH', 'testType' => 'technique', 'statut' => 'Terminé', 'lieu' => 'en ligne'],
         ];
     }
 }

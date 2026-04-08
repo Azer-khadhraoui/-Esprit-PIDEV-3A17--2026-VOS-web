@@ -15,8 +15,8 @@ class Recrutement
     private ?int $id = null;
 
     #[ORM\Column(name: 'date_decision', type: 'date')]
-    #[Assert\NotBlank(message: 'La date de décision est requise.')]
-    #[Assert\Date(message: 'La date doit être valide.')]
+    #[Assert\NotNull(message: 'La date de décision est requise.')]
+    #[Assert\GreaterThanOrEqual('today', message: 'La date de décision ne peut pas être antérieure à aujourd\'hui.')]
     private ?\DateTimeInterface $dateDecision = null;
 
     #[ORM\Column(name: 'decision_finale', type: 'string', length: 50)]
@@ -47,7 +47,7 @@ class Recrutement
         return $this->dateDecision;
     }
 
-    public function setDateDecision(\DateTimeInterface $dateDecision): self
+    public function setDateDecision(?\DateTimeInterface $dateDecision): self
     {
         $this->dateDecision = $dateDecision;
 
