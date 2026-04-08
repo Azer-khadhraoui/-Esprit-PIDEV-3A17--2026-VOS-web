@@ -6,13 +6,12 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\Routing\RouterInterface;
 
-class AdminAuthenticationListener
+class ClientAuthenticationListener
 {
     private const PROTECTED_PREFIXES = [
-        '/admin',
-        '/gestion-offre',
-        '/gestion-entretien',
-        '/evaluation/entretien',
+        '/candidat',
+        '/client',
+        '/opportunites',
     ];
 
     public function __construct(private readonly RouterInterface $router)
@@ -32,20 +31,18 @@ class AdminAuthenticationListener
             return;
         }
 
-        // Vérifier la session admin
         $session = $request->getSession();
-        
+
         if (!$session->isStarted()) {
             $session->start();
         }
 
-        $adminId = $session->get('admin_user_id');
-        $adminRole = $session->get('admin_user_role');
+        $userId = (int) $session->get('user_id', 0);
+        $userRole = (string) $session->get('user_role', '');
 
-        if (!$adminId || !$adminRole || !str_starts_with((string) $adminRole, 'ADMIN')) {
+        if ($userId <= 0 || $userRole !== 'CLIENT') {
             $signinUrl = $this->router->generate('app_signin');
-            $response = new RedirectResponse($signinUrl);
-            $event->setResponse($response);
+            $event->setResponse(new RedirectResponse($signinUrl));
         }
     }
 

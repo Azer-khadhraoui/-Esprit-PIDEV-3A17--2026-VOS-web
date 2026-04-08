@@ -28,3 +28,7 @@ services:
     App\EventListener\AdminAuthenticationListener:
         tags:
             - { name: kernel.event_listener, event: kernel.request, priority: 10 }
+
+    App\EventListener\ClientAuthenticationListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, priority: 9 }
