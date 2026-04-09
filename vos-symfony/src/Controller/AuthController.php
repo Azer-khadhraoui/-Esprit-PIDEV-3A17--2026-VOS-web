@@ -6,6 +6,7 @@ use App\Dto\SignupDto;
 use App\Form\SignupType;
 use App\Service\UserAccountService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -13,11 +14,23 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class AuthController extends AbstractController
 {
+    #[Route('/', name: 'app_home', methods: ['GET'])]
+    public function home(): Response
+    {
+        return $this->redirectToRoute('app_client_accueil');
+    }
+
     #[Route('/signup', name: 'app_signup')]
     public function signup(
         Request $request,
-        UserAccountService $userAccountService
+        UserAccountService $userAccountService,
+        SessionInterface $session
     ): Response {
+        $redirect = $this->redirectAuthenticatedUser($session);
+        if ($redirect instanceof RedirectResponse) {
+            return $redirect;
+        }
+
         $signupDto = new SignupDto();
         $form = $this->createForm(SignupType::class, $signupDto);
         $form->handleRequest($request);
@@ -51,6 +64,11 @@ class AuthController extends AbstractController
         SessionInterface $session
     ): Response
     {
+        $redirect = $this->redirectAuthenticatedUser($session);
+        if ($redirect instanceof RedirectResponse) {
+            return $redirect;
+        }
+
         if ($request->isMethod('POST')) {
             try {
                 $email = (string) $request->request->get('email', '');
@@ -83,7 +101,7 @@ class AuthController extends AbstractController
                     $session->set('auth_scope', 'client');
                     $session->save();
 
-                    return $this->redirectToRoute('app_client_accueil');
+                    return $this->redirectToRoute('app_client_offres');
                 }
 
                 // Session admin
@@ -127,7 +145,7 @@ class AuthController extends AbstractController
 
         $this->addFlash('success', 'Déconnexion réussie.');
 
-        return $this->redirectToRoute('app_signin');
+        return $this->redirectToRoute('app_client_accueil');
     }
 
     #[Route('/contact', name: 'app_contact', methods: ['GET'])]
@@ -152,5 +170,22 @@ class AuthController extends AbstractController
     public function resetPassword(): Response
     {
         return $this->render('auth/reset_password.html.twig');
+    }
+
+    private function redirectAuthenticatedUser(SessionInterface $session): ?RedirectResponse
+    {
+        $adminUserId = (int) $session->get('admin_user_id', 0);
+        $adminRole = (string) $session->get('admin_user_role', '');
+        if ($adminUserId > 0 && str_starts_with($adminRole, 'ADMIN')) {
+            return $this->redirectToRoute('app_admin_dashboard');
+        }
+
+        $userId = (int) $session->get('user_id', 0);
+        $userRole = (string) $session->get('user_role', '');
+        if ($userId > 0 && $userRole === 'CLIENT') {
+            return $this->redirectToRoute('app_client_accueil');
+        }
+
+        return null;
     }
 }

@@ -20,12 +20,18 @@ class ClientController extends AbstractController
     #[Route('/accueil', name: 'app_client_accueil', methods: ['GET'])]
     public function accueil(SessionInterface $session): Response
     {
-        $access = $this->requireClient($session);
-        if ($access instanceof RedirectResponse) {
-            return $access;
+        $adminId = (int) $session->get('admin_user_id', 0);
+        $adminRole = (string) $session->get('admin_user_role', '');
+        if ($adminId > 0 && str_starts_with($adminRole, 'ADMIN')) {
+            return $this->redirectToRoute('app_admin_dashboard');
         }
 
+        $clientId = (int) $session->get('user_id', 0);
+        $clientRole = (string) $session->get('user_role', '');
+        $isAuthenticatedClient = $clientId > 0 && $clientRole === 'CLIENT';
+
         return $this->render('client/accueil.html.twig', [
+            'isAuthenticatedClient' => $isAuthenticatedClient,
             'userName' => (string) $session->get('user_name', 'Client'),
         ]);
     }

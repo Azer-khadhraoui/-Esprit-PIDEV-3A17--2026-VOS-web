@@ -22,8 +22,20 @@
             min-height: 100vh;
             width: 100%;
             overflow: hidden;
-            display: grid;
-            place-items: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .intro-screen .vos-header {
+            position: absolute !important;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            z-index: 50;
+            margin: 0;
         }
 
         .intro-bg {
@@ -44,69 +56,6 @@
                 linear-gradient(180deg, rgba(2, 6, 23, 0.24) 0%, rgba(2, 6, 23, 0.78) 100%);
         }
 
-        .intro-navbar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 5;
-            min-height: 88px;
-            display: flex;
-            align-items: center;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.22);
-            background: linear-gradient(180deg, rgba(2, 6, 23, 0.52), rgba(2, 6, 23, 0.22));
-            backdrop-filter: blur(6px);
-        }
-
-        .intro-nav-inner {
-            width: min(94vw, 1160px);
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .intro-logo {
-            display: inline-flex;
-            align-items: center;
-            height: 82px;
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .intro-logo img {
-            height: 74px;
-            width: auto;
-            display: block;
-            filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35));
-        }
-
-        .intro-links {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: clamp(20px, 3vw, 64px);
-            flex-wrap: wrap;
-        }
-
-        .intro-links a {
-            color: rgba(255, 255, 255, 0.84);
-            text-decoration: none;
-            font-size: clamp(1rem, 1.35vw, 1.12rem);
-            font-weight: 500;
-            letter-spacing: 0.015em;
-            transition: color 0.2s ease, text-shadow 0.2s ease;
-        }
-
-        .intro-links a.is-active,
-        .intro-links a:hover {
-            color: #4361ee;
-            text-shadow: 0 0 18px rgba(67, 97, 238, 0.42);
-        }
-
         .bottom-left-copy {
             position: absolute;
             z-index: 4;
@@ -116,6 +65,10 @@
             color: #ffffff;
             text-shadow: 0 10px 22px rgba(0, 0, 0, 0.45);
             pointer-events: none;
+        }
+
+        .vos-header {
+            position: relative !important;
         }
 
         .bottom-left-title {
@@ -138,47 +91,6 @@
         }
 
         @media (max-width: 780px) {
-            .intro-nav-inner {
-                justify-content: flex-start;
-                padding-left: 0;
-            }
-
-            .intro-logo {
-                position: static;
-                transform: none;
-                height: 56px;
-                margin-right: 12px;
-            }
-
-            .intro-logo img {
-                height: 50px;
-            }
-
-            .intro-links {
-                gap: 12px;
-                justify-content: flex-start;
-                margin-left: 0;
-            }
-
-            .intro-links a {
-                font-size: 0.9rem;
-            }
-
-            .bottom-left-copy {
-                bottom: 18px;
-                left: 16px;
-                right: 16px;
-                max-width: none;
-            }
-
-            .bottom-left-text {
-                margin-top: 10px;
-            }
-
-            .bottom-left-title {
-                font-size: clamp(1rem, 5.2vw, 1.45rem);
-            }
-        }
 
     </style>
 {% endblock %}
@@ -188,20 +100,7 @@
     <video class="intro-bg" src="{{ asset('videos/intro.mp4') }}" autoplay muted loop playsinline preload="auto"></video>
     <div class="intro-overlay"></div>
 
-    <nav class="intro-navbar" aria-label="Navigation accueil">
-        <div class="intro-nav-inner">
-            <a href="{{ path('app_client_accueil') }}" class="intro-logo" aria-label="VOS accueil">
-                <img src="{{ asset('images/logo.png') }}" alt="VOS logo">
-            </a>
-
-            <div class="intro-links">
-                <a href="{{ path('app_client_accueil') }}" class="is-active">Accueil</a>
-                <a href="{{ path('client_opportunites') }}">Opportunités</a>
-                <a href="{{ path('client_mes_contrats') }}">Contrat</a>
-                <a href="{{ path('app_about') }}">À propos</a>
-            </div>
-        </div>
-    </nav>
+    {% include 'components/vos_header.html.twig' %}
 
     <div class="bottom-left-copy">
         <h2 class="bottom-left-title">Connectez-vous<br>aux meilleurs développeurs</h2>

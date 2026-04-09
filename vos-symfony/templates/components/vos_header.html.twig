@@ -1,0 +1,242 @@
+{%- set isAuthenticated = isAuthenticatedClient is defined and isAuthenticatedClient -%}
+<header class="vos-header">
+    <div class="vos-header-inner">
+        <div class="vos-header-left">
+            <a href="{{ path('app_client_accueil') }}" class="vos-logo" aria-label="VOS Accueil">
+                <img src="{{ asset('images/logo.png') }}" alt="VOS Logo" class="vos-logo-img">
+            </a>
+        </div>
+
+        <nav class="vos-nav">
+            {% if not isAuthenticated %}
+                <a href="{{ path('app_client_accueil') }}" class="nav-link{% if 'app_client_accueil' in app.request.attributes.get('_route') %} active{% endif %}">Accueil</a>
+                <a href="{{ path('app_contact') }}" class="nav-link{% if 'app_contact' in app.request.attributes.get('_route') %} active{% endif %}">Contact</a>
+                <a href="{{ path('app_about') }}" class="nav-link{% if 'app_about' in app.request.attributes.get('_route') %} active{% endif %}">À propos</a>
+            {% endif %}
+        </nav>
+
+        {% if isAuthenticated %}
+            <div class="vos-auth-menu">
+                <a href="{{ path('app_client_profile') }}" class="nav-link">Mon profil</a>
+                <form method="post" action="{{ path('app_logout') }}" style="display: inline;">
+                    <button type="submit" class="btn-logout">Déconnexion</button>
+                </form>
+            </div>
+        {% else %}
+            <div class="vos-auth-buttons">
+                <a href="{{ path('app_signin') }}" class="btn-signin">Se connecter</a>
+                <a href="{{ path('app_signup') }}" class="btn-signup">S'inscrire</a>
+            </div>
+        {% endif %}
+    </div>
+</header>
+
+<style>
+.vos-header {
+    position: relative;
+    z-index: 50;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+    background: linear-gradient(180deg, rgba(2, 6, 23, 0.52), rgba(2, 6, 23, 0.22));
+    backdrop-filter: blur(6px);
+}
+
+.vos-header-inner {
+    width: min(94vw, 1160px);
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.vos-header-left {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.vos-logo {
+    display: inline-flex;
+    align-items: center;
+    height: 60px;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+
+.vos-logo:hover {
+    opacity: 0.85;
+}
+
+.vos-logo-img {
+    height: 56px;
+    width: auto;
+    display: block;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+}
+
+.vos-nav {
+    display: flex;
+    align-items: center;
+    gap: clamp(20px, 3vw, 48px);
+    flex: 1;
+}
+
+.nav-link {
+    color: rgba(255, 255, 255, 0.84);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.015em;
+    transition: color 0.2s ease, text-shadow 0.2s ease;
+    white-space: nowrap;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: #4361ee;
+    text-shadow: 0 0 12px rgba(67, 97, 238, 0.6);
+}
+
+.vos-auth-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+}
+
+.vos-auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-left: auto;
+}
+
+.btn-signin {
+    color: #f8fafc;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.5);
+    background: transparent;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-signin:hover {
+    border-color: rgba(67, 97, 238, 0.8);
+    color: #4361ee;
+}
+
+.btn-signup {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #4361ee;
+    background: linear-gradient(135deg, #4361ee, #3651cc);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+}
+
+.btn-signup:hover {
+    box-shadow: 0 6px 20px rgba(67, 97, 238, 0.5);
+    transform: translateY(-2px);
+}
+
+.btn-logout {
+    color: #f8fafc;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border: 1px solid #dc2626;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-logout:hover {
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .vos-header {
+        min-height: 70px;
+    }
+
+    .vos-header-inner {
+        gap: 1rem;
+    }
+
+    .vos-logo {
+        height: 50px;
+    }
+
+    .vos-logo-img {
+        height: 48px;
+    }
+
+    .vos-nav {
+        gap: 12px;
+        flex: 1;
+        justify-content: center;
+    }
+
+    .nav-link {
+        font-size: 0.85rem;
+    }
+
+    .vos-auth-buttons,
+    .vos-auth-menu {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+
+    .btn-signin,
+    .btn-signup,
+    .btn-logout {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .vos-header-inner {
+        flex-wrap: wrap;
+        padding: 0.5rem;
+    }
+
+    .vos-nav {
+        width: 100%;
+        order: 3;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 0.5rem;
+    }
+
+    .nav-link {
+        font-size: 0.8rem;
+    }
+
+    .vos-auth-buttons {
+        gap: 0.4rem;
+    }
+
+    .btn-signin,
+    .btn-signup {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+}
+</style>
