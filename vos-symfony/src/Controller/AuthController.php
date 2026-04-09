@@ -151,13 +151,9 @@ class AuthController extends AbstractController
     #[Route('/logout', name: 'app_logout', methods: ['POST'])]
     public function logout(SessionInterface $session): Response
     {
-        $session->remove('admin_user_id');
-        $session->remove('admin_user_role');
-        $session->remove('admin_user_name');
-        $session->remove('user_id');
-        $session->remove('user_role');
-        $session->remove('user_name');
-        $session->remove('auth_scope');
+        if ($session->isStarted()) {
+            $session->invalidate();
+        }
 
         $this->addFlash('success', 'Déconnexion réussie.');
 
