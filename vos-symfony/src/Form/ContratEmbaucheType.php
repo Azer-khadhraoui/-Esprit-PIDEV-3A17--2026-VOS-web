@@ -15,6 +15,10 @@ use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Choice;
+use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
+use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 class ContratEmbaucheType extends AbstractType
 {
@@ -32,11 +36,16 @@ class ContratEmbaucheType extends AbstractType
                     'Freelance' => 'Freelance',
                 ],
                 'placeholder' => 'Choisir un type',
+                'constraints' => [
+                    new NotBlank(['message' => 'Le type de contrat est obligatoire.']),
+                    new Choice(['choices' => ['CDI', 'CDD', 'Stage', 'Alternance', 'Freelance']]),
+                ],
             ])
             ->add('dateDebut', DateType::class, [
                 'widget' => 'single_text',
                 'label' => 'Date de debut',
                 'required' => false,
+                'constraints' => [new NotBlank(['message' => 'La date de debut est obligatoire.'])],
             ])
             ->add('dateFin', DateType::class, [
                 'widget' => 'single_text',
@@ -47,10 +56,18 @@ class ContratEmbaucheType extends AbstractType
                 'currency' => 'EUR',
                 'label' => 'Salaire',
                 'required' => false,
+                'constraints' => [
+                    new NotBlank(['message' => 'Le salaire est obligatoire.']),
+                    new GreaterThanOrEqual(['value' => 0]),
+                ],
             ])
             ->add('volumeHoraire', TextType::class, [
                 'label' => 'Volume horaire',
                 'required' => false,
+                'constraints' => [
+                    new NotBlank(['message' => 'Le volume horaire est obligatoire.']),
+                    new Length(['min' => 2, 'max' => 50]),
+                ],
             ])
             ->add('avantages', ChoiceType::class, [
                 'label' => 'Avantages',
@@ -68,6 +85,7 @@ class ContratEmbaucheType extends AbstractType
                 'required' => false,
                 'choices' => $options['recrutement_choices'],
                 'placeholder' => 'Choisir un recrutement accepte',
+                'constraints' => [new NotBlank(['message' => 'Le recrutement est obligatoire.'])],
             ])
             ->add('save', SubmitType::class, [
                 'label' => 'Enregistrer',

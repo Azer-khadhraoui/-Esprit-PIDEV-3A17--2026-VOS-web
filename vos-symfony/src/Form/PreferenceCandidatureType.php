@@ -10,6 +10,10 @@ use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Choice;
+use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\PositiveOrZero;
 
 class PreferenceCandidatureType extends AbstractType
 {
@@ -20,6 +24,10 @@ class PreferenceCandidatureType extends AbstractType
             ->add('type_poste_souhaite', TextType::class, [
                 'label' => 'Type de poste souhaité',
                 'required' => false,
+                'constraints' => [
+                    new NotBlank(['message' => 'Le type de poste est obligatoire.']),
+                    new Length(['min' => 2, 'max' => 100]),
+                ],
                 'attr' => [
                     'placeholder' => 'Ex: Développeur, Designer, Manager...',
                     'class' => 'form-control'
@@ -36,6 +44,10 @@ class PreferenceCandidatureType extends AbstractType
                     '100% Télétravail' => '100% Télétravail',
                     'Hybride' => 'Hybride',
                 ],
+                'constraints' => [
+                    new NotBlank(['message' => 'Le mode de travail est obligatoire.']),
+                    new Choice(['choices' => ['100% Présentiel', '100% Télétravail', 'Hybride']]),
+                ],
                 'attr' => ['class' => 'form-control']
             ])
             
@@ -50,6 +62,10 @@ class PreferenceCandidatureType extends AbstractType
                     'Dans 3 mois' => 'Dans 3 mois',
                     'Dans 6 mois' => 'Dans 6 mois',
                 ],
+                'constraints' => [
+                    new NotBlank(['message' => 'La disponibilite est obligatoire.']),
+                    new Choice(['choices' => ['Immédiatement', 'Dans 1 mois', 'Dans 3 mois', 'Dans 6 mois']]),
+                ],
                 'attr' => ['class' => 'form-control']
             ])
             
@@ -63,6 +79,10 @@ class PreferenceCandidatureType extends AbstractType
                     'Oui, région' => 'Oui, région',
                     'Non' => 'Non',
                 ],
+                'constraints' => [
+                    new NotBlank(['message' => 'La mobilite geographique est obligatoire.']),
+                    new Choice(['choices' => ['Oui, national', 'Oui, région', 'Non']]),
+                ],
                 'attr' => ['class' => 'form-control']
             ])
             
@@ -75,6 +95,10 @@ class PreferenceCandidatureType extends AbstractType
                     'Jamais' => 'Jamais',
                     'Occasionnel' => 'Occasionnel',
                     'Fréquent' => 'Fréquent',
+                ],
+                'constraints' => [
+                    new NotBlank(['message' => 'Le pret au deplacement est obligatoire.']),
+                    new Choice(['choices' => ['Jamais', 'Occasionnel', 'Fréquent']]),
                 ],
                 'attr' => ['class' => 'form-control']
             ])
@@ -91,6 +115,10 @@ class PreferenceCandidatureType extends AbstractType
                     'Alternance' => 'Alternance',
                     'Freelance' => 'Freelance',
                 ],
+                'constraints' => [
+                    new NotBlank(['message' => 'Le type de contrat souhaite est obligatoire.']),
+                    new Choice(['choices' => ['CDI', 'CDD', 'Stage', 'Alternance', 'Freelance']]),
+                ],
                 'attr' => ['class' => 'form-control']
             ])
             
@@ -100,6 +128,9 @@ class PreferenceCandidatureType extends AbstractType
                 'required' => false,
                 'currency' => 'TND',
                 'divisor' => 1,
+                'constraints' => [
+                    new PositiveOrZero(['message' => 'La pretention salariale doit etre positive.']),
+                ],
                 'attr' => [
                     'placeholder' => '0',
                     'class' => 'form-control'

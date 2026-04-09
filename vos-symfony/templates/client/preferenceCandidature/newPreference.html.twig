@@ -268,7 +268,7 @@
             <h2>Définez vos critères</h2>
             <p>Indiquez vos préférences pour que nous trouvions les meilleures opportunités.</p>
 
-            {{ form_start(form) }}
+            {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
 
             <div class="form-group">
                 {{ form_label(form.type_poste_souhaite, 'Type de poste souhaité') }}

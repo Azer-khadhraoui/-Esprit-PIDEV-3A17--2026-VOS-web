@@ -34,7 +34,7 @@
                 <h1>Statistique Utilisateurs</h1>
                 <p>Bienvenue {{ adminName }}</p>
             </div>
-            <form method="post" action="{{ path('app_logout') }}">
+            <form method="post" action="{{ path('app_logout') }}" novalidate>
                 <button class="btn-logout" type="submit">Déconnexion</button>
             </form>
         </header>

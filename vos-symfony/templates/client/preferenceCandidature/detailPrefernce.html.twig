@@ -294,7 +294,7 @@
                     ✏️ Modifier
                 </a>
                 <a href="{{ path('app_client_preferences') }}" class="btn btn-secondary">Retour</a>
-                <form method="POST" action="{{ path('app_client_preference_delete', {id_preference: preference.idPreference}) }}" style="flex: 1;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette préférence?');">
+                <form method="POST" action="{{ path('app_client_preference_delete', {id_preference: preference.idPreference}) }}" style="flex: 1;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette préférence?');" novalidate>
                     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ preference.idPreference) }}">
                     <button type="submit" class="btn btn-danger" style="width: 100%; margin: 0;">🗑️ Supprimer</button>
                 </form>

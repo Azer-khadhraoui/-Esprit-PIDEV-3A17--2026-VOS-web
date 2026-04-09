@@ -31,7 +31,7 @@
                 <h1>Modifier Candidature</h1>
                 <p>Bienvenue {{ adminName }}</p>
             </div>
-            <form method="post" action="{{ path('app_logout') }}">
+            <form method="post" action="{{ path('app_logout') }}" novalidate>
                 <button class="btn-logout" type="submit">Déconnexion</button>
             </form>
         </header>
@@ -93,13 +93,17 @@
 
                     <div class="form-group">
                         <label>Statut</label>
-                        <form method="POST" class="inline-form">
+                        <form method="POST" class="inline-form" novalidate>
+                            <input type="hidden" name="_token" value="{{ csrf_token('edit_candidature_' ~ candidature.idCandidature) }}">
                             <select name="statut" class="form-select">
                                 <option value="En attente" {% if candidature.statut == 'En attente' %}selected{% endif %}>En attente</option>
                                 <option value="En examens" {% if candidature.statut == 'En examens' %}selected{% endif %}>En examens</option>
                                 <option value="Acceptlee" {% if candidature.statut == 'Acceptlee' %}selected{% endif %}>Acceptée</option>
                                 <option value="Rejetee" {% if candidature.statut == 'Rejetee' %}selected{% endif %}>Rejetée</option>
                             </select>
+                            {% if fieldErrors.statut is defined %}
+                                <small style="color:#b91c1c;font-size:0.82rem;display:block;margin-top:4px;">{{ fieldErrors.statut }}</small>
+                            {% endif %}
                             <button type="submit" class="btn-save">Enregistrer</button>
                             <a href="{{ path('app_admin_candidatures') }}" class="btn-cancel">Annuler</a>
                         </form>

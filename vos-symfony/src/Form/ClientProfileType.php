@@ -10,7 +10,10 @@ use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Constraints\File;
+use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 class ClientProfileType extends AbstractType
 {
@@ -35,12 +38,27 @@ class ClientProfileType extends AbstractType
             ])
             ->add('nom', TextType::class, [
                 'label' => 'Nom',
+                'required' => false,
+                'constraints' => [
+                    new NotBlank(['message' => 'Le nom est obligatoire.']),
+                    new Length(['min' => 2, 'max' => 50]),
+                ],
             ])
             ->add('prenom', TextType::class, [
                 'label' => 'Prénom',
+                'required' => false,
+                'constraints' => [
+                    new NotBlank(['message' => 'Le prenom est obligatoire.']),
+                    new Length(['min' => 2, 'max' => 50]),
+                ],
             ])
             ->add('email', EmailType::class, [
                 'label' => 'Adresse e-mail',
+                'required' => false,
+                'constraints' => [
+                    new NotBlank(['message' => 'L email est obligatoire.']),
+                    new Email(['message' => 'Adresse e-mail invalide.']),
+                ],
             ])
             ->add('newPassword', PasswordType::class, [
                 'label' => 'Nouveau mot de passe (optionnel)',

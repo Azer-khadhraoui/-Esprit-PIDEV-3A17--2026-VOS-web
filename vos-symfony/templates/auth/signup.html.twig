@@ -111,7 +111,7 @@
                         <div class="flash flash-success">{{ message }}</div>
                     {% endfor %}
 
-                    {{ form_start(signupForm, {'attr': {'class': 'signup-form', 'enctype': 'multipart/form-data'}}) }}
+                    {{ form_start(signupForm, {'attr': {'class': 'signup-form', 'enctype': 'multipart/form-data', 'novalidate': 'novalidate'}}) }}
                         <div class="profile-upload">
                             <div class="profile-preview">
                                 <img data-profile-preview src="" alt="Aperçu de la photo de profil" hidden>

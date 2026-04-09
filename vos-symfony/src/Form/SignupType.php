@@ -35,21 +35,26 @@ class SignupType extends AbstractType
             ])
             ->add('nom', TextType::class, [
                 'label' => 'Nom',
+                'required' => false,
             ])
             ->add('prenom', TextType::class, [
                 'label' => 'Prénom',
+                'required' => false,
             ])
             ->add('email', EmailType::class, [
                 'label' => 'Adresse e-mail',
+                'required' => false,
             ])
             ->add('password', PasswordType::class, [
                 'label' => 'Mot de passe',
+                'required' => false,
                 'attr' => [
                     'autocomplete' => 'new-password',
                 ],
             ])
             ->add('confirmPassword', PasswordType::class, [
                 'label' => 'Confirmer le mot de passe',
+                'required' => false,
                 'attr' => [
                     'autocomplete' => 'new-password',
                 ],

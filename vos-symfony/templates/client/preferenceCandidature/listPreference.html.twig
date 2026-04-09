@@ -319,7 +319,7 @@
                         <div class="card-actions">
                             <a href="{{ path('app_client_preference_detail', {id_preference: preference.idPreference}) }}" class="btn-small btn-view">Voir</a>
                             <a href="{{ path('app_client_preference_edit', {id_preference: preference.idPreference}) }}" class="btn-small btn-edit">Modifier</a>
-                            <form method="POST" action="{{ path('app_client_preference_delete', {id_preference: preference.idPreference}) }}" style="flex: 1;" onsubmit="return confirm('Êtes-vous sûr?');">
+                            <form method="POST" action="{{ path('app_client_preference_delete', {id_preference: preference.idPreference}) }}" style="flex: 1;" onsubmit="return confirm('Êtes-vous sûr?');" novalidate>
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ preference.idPreference) }}">
                                 <button type="submit" class="btn-small btn-delete" style="width: 100%; margin: 0;">Supprimer</button>
                             </form>

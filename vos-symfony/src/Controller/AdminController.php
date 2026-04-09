@@ -233,11 +233,31 @@ class AdminController extends AbstractController
             return $access;
         }
 
+        $fieldErrors = [];
+
         if ($request->isMethod('POST')) {
-            $candidature->setStatut((string) $request->request->get('statut', $candidature->getStatut()));
-            $entityManager->flush();
-            $this->addFlash('success', 'Candidature modifiée avec succès.');
-            return $this->redirectToRoute('app_admin_candidatures');
+            $token = (string) $request->request->get('_token');
+            if (!$this->isCsrfTokenValid('edit_candidature_' . $candidature->getIdCandidature(), $token)) {
+                $fieldErrors['statut'] = 'Token CSRF invalide.';
+            }
+
+            $allowedStatus = ['En attente', 'En examens', 'Acceptlee', 'Rejetee'];
+            $statut = trim((string) $request->request->get('statut', ''));
+            if ($statut === '' || !in_array($statut, $allowedStatus, true)) {
+                $fieldErrors['statut'] = 'Statut invalide.';
+            }
+
+            if ($fieldErrors === []) {
+                $candidature->setStatut($statut);
+                $entityManager->flush();
+                $this->addFlash('success', 'Candidature modifiée avec succès.');
+
+                return $this->redirectToRoute('app_admin_candidatures');
+            }
+
+            if ($statut !== '') {
+                $candidature->setStatut($statut);
+            }
         }
 
         // Charger l'utilisateur et l'offre séparément
@@ -257,6 +277,7 @@ class AdminController extends AbstractController
             'adminName' => (string) $session->get('admin_user_name', 'Admin'),
             'user' => $user,
             'offre' => $offre,
+            'fieldErrors' => $fieldErrors,
         ]);
     }
 
@@ -346,23 +367,93 @@ class AdminController extends AbstractController
             return $access;
         }
 
+        $fieldErrors = [];
+        $formValues = [
+            'type_poste_souhaite' => (string) ($preference->getTypePosteSouhaite() ?? ''),
+            'mode_travail' => (string) ($preference->getModeTravail() ?? ''),
+            'disponibilite' => (string) ($preference->getDisponibilite() ?? ''),
+            'date_disponibilite' => $preference->getDateDisponibilite()?->format('Y-m-d') ?? '',
+            'mobilite_geographique' => (string) ($preference->getMobiliteGeographique() ?? ''),
+            'pret_deplacement' => (string) ($preference->getPretDeplacement() ?? ''),
+            'type_contrat_souhaite' => (string) ($preference->getTypeContratSouhaite() ?? ''),
+        ];
+
         if ($request->isMethod('POST')) {
-            $preference->setTypePosteSouhaite((string) $request->request->get('type_poste_souhaite'));
-            $preference->setModeTravail((string) $request->request->get('mode_travail'));
-            $preference->setDisponibilite((string) $request->request->get('disponibilite'));
-            $preference->setMobiliteGeographique((string) $request->request->get('mobilite_geographique'));
-            $preference->setPretDeplacement((string) $request->request->get('pret_deplacement'));
-            $preference->setTypeContratSouhaite((string) $request->request->get('type_contrat_souhaite'));
-            
-            // Traiter la date de disponibilité
-            $dateDisp = $request->request->get('date_disponibilite');
-            if ($dateDisp) {
-                $preference->setDateDisponibilite(new \DateTime($dateDisp));
+            $token = (string) $request->request->get('_token');
+            if (!$this->isCsrfTokenValid('edit_preference_' . $preference->getIdPreference(), $token)) {
+                $fieldErrors['_form'] = 'Token CSRF invalide.';
             }
-            
-            $entityManager->flush();
-            $this->addFlash('success', 'Préférence modifiée avec succès.');
-            return $this->redirectToRoute('app_admin_preferences');
+
+            $typePosteSouhaite = trim((string) $request->request->get('type_poste_souhaite', ''));
+            $modeTravail = trim((string) $request->request->get('mode_travail', ''));
+            $disponibilite = trim((string) $request->request->get('disponibilite', ''));
+            $mobiliteGeographique = trim((string) $request->request->get('mobilite_geographique', ''));
+            $pretDeplacement = trim((string) $request->request->get('pret_deplacement', ''));
+            $typeContratSouhaite = trim((string) $request->request->get('type_contrat_souhaite', ''));
+            $dateDisp = trim((string) $request->request->get('date_disponibilite', ''));
+
+            $formValues = [
+                'type_poste_souhaite' => $typePosteSouhaite,
+                'mode_travail' => $modeTravail,
+                'disponibilite' => $disponibilite,
+                'date_disponibilite' => $dateDisp,
+                'mobilite_geographique' => $mobiliteGeographique,
+                'pret_deplacement' => $pretDeplacement,
+                'type_contrat_souhaite' => $typeContratSouhaite,
+            ];
+
+            if (mb_strlen($typePosteSouhaite) < 2 || mb_strlen($typePosteSouhaite) > 100) {
+                $fieldErrors['type_poste_souhaite'] = 'Le type de poste doit contenir entre 2 et 100 caracteres.';
+            }
+
+            $allowedModeTravail = ['100% Présentiel', '100% Télétravail', 'Hybride'];
+            if ($modeTravail === '' || !in_array($modeTravail, $allowedModeTravail, true)) {
+                $fieldErrors['mode_travail'] = 'Mode de travail invalide.';
+            }
+
+            $allowedDisponibilite = ['Immédiatement', 'Dans 1 mois', 'Dans 3 mois', 'Dans 6 mois'];
+            if ($disponibilite === '' || !in_array($disponibilite, $allowedDisponibilite, true)) {
+                $fieldErrors['disponibilite'] = 'Disponibilite invalide.';
+            }
+
+            $allowedMobilite = ['Oui, national', 'Oui, région', 'Non'];
+            if ($mobiliteGeographique === '' || !in_array($mobiliteGeographique, $allowedMobilite, true)) {
+                $fieldErrors['mobilite_geographique'] = 'Mobilite geographique invalide.';
+            }
+
+            $allowedPretDeplacement = ['Jamais', 'Occasionnel', 'Fréquent'];
+            if ($pretDeplacement === '' || !in_array($pretDeplacement, $allowedPretDeplacement, true)) {
+                $fieldErrors['pret_deplacement'] = 'Pret au deplacement invalide.';
+            }
+
+            $allowedTypeContrat = ['CDI', 'CDD', 'Stage', 'Alternance', 'Freelance'];
+            if ($typeContratSouhaite === '' || !in_array($typeContratSouhaite, $allowedTypeContrat, true)) {
+                $fieldErrors['type_contrat_souhaite'] = 'Type de contrat invalide.';
+            }
+
+            $dateDisponibilite = null;
+            if ($dateDisp !== '') {
+                try {
+                    $dateDisponibilite = new \DateTime($dateDisp);
+                } catch (\Throwable) {
+                    $fieldErrors['date_disponibilite'] = 'Date de disponibilite invalide.';
+                }
+            }
+
+            if ($fieldErrors === []) {
+                $preference->setTypePosteSouhaite($typePosteSouhaite);
+                $preference->setModeTravail($modeTravail);
+                $preference->setDisponibilite($disponibilite);
+                $preference->setMobiliteGeographique($mobiliteGeographique);
+                $preference->setPretDeplacement($pretDeplacement);
+                $preference->setTypeContratSouhaite($typeContratSouhaite);
+                $preference->setDateDisponibilite($dateDisponibilite);
+
+                $entityManager->flush();
+                $this->addFlash('success', 'Préférence modifiée avec succès.');
+
+                return $this->redirectToRoute('app_admin_preferences');
+            }
         }
 
         // Charger l'utilisateur
@@ -375,6 +466,8 @@ class AdminController extends AbstractController
             'preference' => $preference,
             'user' => $user,
             'adminName' => (string) $session->get('admin_user_name', 'Admin'),
+            'fieldErrors' => $fieldErrors,
+            'formValues' => $formValues,
         ]);
     }
 

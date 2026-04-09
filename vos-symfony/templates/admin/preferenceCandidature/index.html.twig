@@ -31,7 +31,7 @@
                 <h1>Gestion Préférences</h1>
                 <p>Bienvenue {{ adminName }}</p>
             </div>
-            <form method="post" action="{{ path('app_logout') }}">
+            <form method="post" action="{{ path('app_logout') }}" novalidate>
                 <button class="btn-logout" type="submit">Déconnexion</button>
             </form>
         </header>
@@ -102,7 +102,7 @@
                             <td>
                                 <div class="actions">
                                     <a class="btn-edit" href="{{ path('app_admin_preference_edit', {id: preference.idPreference}) }}">Modifier</a>
-                                    <form method="post" action="{{ path('app_admin_preference_delete', {id: preference.idPreference}) }}" onsubmit="return confirm('Supprimer cette préférence ?');" style="display: inline;">
+                                    <form method="post" action="{{ path('app_admin_preference_delete', {id: preference.idPreference}) }}" onsubmit="return confirm('Supprimer cette préférence ?');" style="display: inline;" novalidate>
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete_preference_' ~ preference.idPreference) }}">
                                         <button class="btn-delete" type="submit">Supprimer</button>
                                     </form>

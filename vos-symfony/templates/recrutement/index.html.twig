@@ -138,7 +138,7 @@
                                 <td>
                                     <div class="actions">
                                         <a class="btn-edit" href="{{ path('recrutement_edit', {id: recrutement.id}) }}">Modifier</a>
-                                        <form method="post" action="{{ path('recrutement_delete', {id: recrutement.id}) }}" onsubmit="return confirm('Supprimer ce recrutement ?');">
+                                        <form method="post" action="{{ path('recrutement_delete', {id: recrutement.id}) }}" onsubmit="return confirm('Supprimer ce recrutement ?');" novalidate>
                                             <input type="hidden" name="_token" value="{{ csrf_token('delete_recrutement_' ~ recrutement.id) }}">
                                             <button class="btn-delete" type="submit">Supprimer</button>
                                         </form>

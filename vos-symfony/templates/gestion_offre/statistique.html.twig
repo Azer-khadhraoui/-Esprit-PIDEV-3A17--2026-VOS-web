@@ -27,7 +27,7 @@
                     <h1 class="page-title">Statistique Offres</h1>
                     <p class="subtitle">Bienvenue {{ currentUserName }}</p>
                 </div>
-                <form method="post" action="{{ path('app_logout') }}">
+                <form method="post" action="{{ path('app_logout') }}" novalidate>
                     <button class="logout-btn" type="submit">Déconnexion</button>
                 </form>
             </div>

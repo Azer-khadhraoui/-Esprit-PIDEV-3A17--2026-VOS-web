@@ -27,7 +27,7 @@
                     <h1 class="page-title" style="font-size:clamp(1.8rem, 2.4vw, 2.8rem);">{{ pageTitle }}</h1>
                     <p class="subtitle">Offre #{{ offre.idOffre }} - {{ offre.titre ?? 'Sans titre' }}</p>
                 </div>
-                <form method="post" action="{{ path('app_logout') }}">
+                <form method="post" action="{{ path('app_logout') }}" novalidate>
                     <button class="logout-btn" type="submit">Déconnexion</button>
                 </form>
             </div>
@@ -43,29 +43,29 @@
             {% endfor %}
 
             <section style="background:var(--panel);color:var(--text);border-radius:20px;box-shadow:var(--shadow);padding:18px;max-width:980px;">
-                <form method="post" style="display:grid;gap:10px;">
+                <form method="post" style="display:grid;gap:10px;" novalidate>
                     <label style="display:grid;gap:6px;">
                         <span style="font-weight:600;color:#334155;">Niveau experience</span>
-                        <input id="niveau_experience" type="text" name="niveau_experience" value="{{ critere.niveauExperience ?? '' }}" required minlength="2" maxlength="50" placeholder="ex: 2 ans" style="border:1px solid #d0d8e5;border-radius:10px;padding:10px 12px;">
-                        <small id="niveau_experience_feedback" style="font-size:0.82rem;color:#64748b;">Saisir entre 2 et 50 caracteres.</small>
+                        <input id="niveau_experience" type="text" name="niveau_experience" value="{{ critere.niveauExperience ?? '' }}" minlength="2" maxlength="50" placeholder="ex: 2 ans" style="border:1px solid #d0d8e5;border-radius:10px;padding:10px 12px;">
+                        <small id="niveau_experience_feedback" style="font-size:0.82rem;color:{{ fieldErrors.niveau_experience is defined ? '#b91c1c' : '#64748b' }};">{{ fieldErrors.niveau_experience|default('Saisir entre 2 et 50 caracteres.') }}</small>
                     </label>
 
                     <label style="display:grid;gap:6px;">
                         <span style="font-weight:600;color:#334155;">Niveau etude</span>
-                        <input id="niveau_etude" type="text" name="niveau_etude" value="{{ critere.niveauEtude ?? '' }}" required minlength="2" maxlength="50" placeholder="ex: Licence" style="border:1px solid #d0d8e5;border-radius:10px;padding:10px 12px;">
-                        <small id="niveau_etude_feedback" style="font-size:0.82rem;color:#64748b;">Saisir entre 2 et 50 caracteres.</small>
+                        <input id="niveau_etude" type="text" name="niveau_etude" value="{{ critere.niveauEtude ?? '' }}" minlength="2" maxlength="50" placeholder="ex: Licence" style="border:1px solid #d0d8e5;border-radius:10px;padding:10px 12px;">
+                        <small id="niveau_etude_feedback" style="font-size:0.82rem;color:{{ fieldErrors.niveau_etude is defined ? '#b91c1c' : '#64748b' }};">{{ fieldErrors.niveau_etude|default('Saisir entre 2 et 50 caracteres.') }}</small>
                     </label>
 
                     <label style="display:grid;gap:6px;">
                         <span style="font-weight:600;color:#334155;">Competences requises</span>
-                        <textarea id="competences_requises" name="competences_requises" rows="3" required minlength="3" maxlength="2000" placeholder="ex: Java, Symfony, SQL" style="border:1px solid #d0d8e5;border-radius:10px;padding:10px 12px;resize:vertical;">{{ critere.competencesRequises ?? '' }}</textarea>
-                        <small id="competences_requises_feedback" style="font-size:0.82rem;color:#64748b;">Saisir entre 3 et 2000 caracteres.</small>
+                        <textarea id="competences_requises" name="competences_requises" rows="3" minlength="3" maxlength="2000" placeholder="ex: Java, Symfony, SQL" style="border:1px solid #d0d8e5;border-radius:10px;padding:10px 12px;resize:vertical;">{{ critere.competencesRequises ?? '' }}</textarea>
+                        <small id="competences_requises_feedback" style="font-size:0.82rem;color:{{ fieldErrors.competences_requises is defined ? '#b91c1c' : '#64748b' }};">{{ fieldErrors.competences_requises|default('Saisir entre 3 et 2000 caracteres.') }}</small>
                     </label>
 
                     <label style="display:grid;gap:6px;">
                         <span style="font-weight:600;color:#334155;">Responsibilities</span>
-                        <textarea id="responsibilities" name="responsibilities" rows="3" required minlength="3" maxlength="2000" placeholder="ex: Developper API, corriger bugs, tests" style="border:1px solid #d0d8e5;border-radius:10px;padding:10px 12px;resize:vertical;">{{ critere.responsibilities ?? '' }}</textarea>
-                        <small id="responsibilities_feedback" style="font-size:0.82rem;color:#64748b;">Saisir entre 3 et 2000 caracteres.</small>
+                        <textarea id="responsibilities" name="responsibilities" rows="3" minlength="3" maxlength="2000" placeholder="ex: Developper API, corriger bugs, tests" style="border:1px solid #d0d8e5;border-radius:10px;padding:10px 12px;resize:vertical;">{{ critere.responsibilities ?? '' }}</textarea>
+                        <small id="responsibilities_feedback" style="font-size:0.82rem;color:{{ fieldErrors.responsibilities is defined ? '#b91c1c' : '#64748b' }};">{{ fieldErrors.responsibilities|default('Saisir entre 3 et 2000 caracteres.') }}</small>
                     </label>
 
                     <div style="display:flex;gap:10px;flex-wrap:wrap;">

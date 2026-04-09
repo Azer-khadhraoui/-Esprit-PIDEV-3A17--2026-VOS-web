@@ -27,7 +27,7 @@
                     <h1 class="page-title" style="font-size:clamp(1.8rem, 2.5vw, 2.7rem);">{{ pageTitle }}</h1>
                     <p class="subtitle">Bienvenue {{ currentUserName }}</p>
                 </div>
-                <form method="post" action="{{ path('app_logout') }}">
+                <form method="post" action="{{ path('app_logout') }}" novalidate>
                     <button class="logout-btn" type="submit">Déconnexion</button>
                 </form>
             </div>
@@ -47,21 +47,25 @@
             {% endfor %}
 
             <section style="background:var(--panel);color:var(--text);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;max-width:980px;">
-                <form method="post" id="offreForm" style="display:grid;gap:14px;">
+                <form method="post" id="offreForm" novalidate style="display:grid;gap:14px;">
+                    <input type="hidden" name="_token" value="{{ csrf_token(csrfTokenId|default('offre_form_new')) }}">
+                    {% if fieldErrors._form is defined %}
+                        <div style="padding:10px 12px;border-radius:10px;background:#fee2e2;color:#991b1b;font-size:0.9rem;">{{ fieldErrors._form }}</div>
+                    {% endif %}
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                         <div style="display:grid;gap:6px;">
                             <label style="font-weight:600;color:#334155;">
                                 Titre
                             </label>
-                            <input type="text" name="titre" id="titre" value="{{ offre.titre ?? '' }}" required minlength="3" maxlength="100" style="border:1px solid #d0d8e5;border-radius:12px;padding:12px;transition:border-color 0.2s;">
-                            <span id="titre-error" style="display:none;font-size:0.875rem;color:#dc2626;margin-top:2px;"></span>
+                            <input type="text" name="titre" id="titre" value="{{ offre.titre ?? '' }}" minlength="3" maxlength="100" style="border:1px solid #d0d8e5;border-radius:12px;padding:12px;transition:border-color 0.2s;">
+                            <span id="titre-error" style="display:{{ fieldErrors.titre is defined ? 'block' : 'none' }};font-size:0.875rem;color:#dc2626;margin-top:2px;">{{ fieldErrors.titre|default('') }}</span>
                         </div>
                         <div style="display:grid;gap:6px;">
                             <label style="font-weight:600;color:#334155;">
                                 Type contrat
                             </label>
                             {% set currentTypeContrat = offre.typeContrat ?? '' %}
-                            <select name="type_contrat" id="type_contrat" required style="border:1px solid #d0d8e5;border-radius:12px;padding:12px;background:#fff;transition:border-color 0.2s;">
+                            <select name="type_contrat" id="type_contrat" style="border:1px solid #d0d8e5;border-radius:12px;padding:12px;background:#fff;transition:border-color 0.2s;">
                                 <option value="">Choisir un type</option>
                                 <option value="CDI" {{ currentTypeContrat == 'CDI' ? 'selected' : '' }}>CDI</option>
                                 <option value="CDD" {{ currentTypeContrat == 'CDD' ? 'selected' : '' }}>CDD</option>
@@ -72,7 +76,7 @@
                                     <option value="{{ currentTypeContrat }}" selected>{{ currentTypeContrat }}</option>
                                 {% endif %}
                             </select>
-                            <span id="type_contrat-error" style="display:none;font-size:0.875rem;color:#dc2626;margin-top:2px;"></span>
+                            <span id="type_contrat-error" style="display:{{ fieldErrors.type_contrat is defined ? 'block' : 'none' }};font-size:0.875rem;color:#dc2626;margin-top:2px;">{{ fieldErrors.type_contrat|default('') }}</span>
                         </div>
                     </div>
 
@@ -81,7 +85,7 @@
                             Description
                         </label>
                         <textarea name="description" id="description" rows="4" maxlength="5000" style="border:1px solid #d0d8e5;border-radius:12px;padding:12px;resize:vertical;transition:border-color 0.2s;">{{ offre.description ?? '' }}</textarea>
-                        <span id="description-error" style="display:none;font-size:0.875rem;color:#f59e0b;margin-top:2px;"></span>
+                        <span id="description-error" style="display:{{ fieldErrors.description is defined ? 'block' : 'none' }};font-size:0.875rem;color:#dc2626;margin-top:2px;">{{ fieldErrors.description|default('') }}</span>
                     </div>
 
                     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
@@ -89,7 +93,7 @@
                             <label style="font-weight:600;color:#334155;">
                                 Statut
                             </label>
-                            <select name="statut_offre" id="statut_offre" required style="border:1px solid #d0d8e5;border-radius:12px;padding:12px;background:#fff;transition:border-color 0.2s;">
+                            <select name="statut_offre" id="statut_offre" style="border:1px solid #d0d8e5;border-radius:12px;padding:12px;background:#fff;transition:border-color 0.2s;">
                                 {% set currentStatus = offre.statutOffre ?? '' %}
                                 <option value="">Choisir un statut</option>
                                 <option value="OUVERTE" {{ currentStatus in ['OUVERTE', 'ACTIVE'] ? 'selected' : '' }}>Ouverte aux candidatures</option>
@@ -99,28 +103,28 @@
                                     <option value="{{ currentStatus }}" selected>{{ currentStatus }}</option>
                                 {% endif %}
                             </select>
-                            <span id="statut_offre-error" style="display:none;font-size:0.875rem;color:#dc2626;margin-top:2px;"></span>
+                            <span id="statut_offre-error" style="display:{{ fieldErrors.statut_offre is defined ? 'block' : 'none' }};font-size:0.875rem;color:#dc2626;margin-top:2px;">{{ fieldErrors.statut_offre|default('') }}</span>
                         </div>
 
                         <div style="display:grid;gap:6px;">
                             <label style="font-weight:600;color:#334155;">
                                 Date publication
                             </label>
-                            <input type="date" name="date_publication" id="date_publication" value="{{ offre.datePublication ? offre.datePublication|date('Y-m-d') : '' }}" required style="border:1px solid #d0d8e5;border-radius:12px;padding:12px;transition:border-color 0.2s;">
-                            <span id="date_publication-error" style="display:none;font-size:0.875rem;color:#dc2626;margin-top:2px;"></span>
+                            <input type="date" name="date_publication" id="date_publication" value="{{ offre.datePublication ? offre.datePublication|date('Y-m-d') : '' }}" style="border:1px solid #d0d8e5;border-radius:12px;padding:12px;transition:border-color 0.2s;">
+                            <span id="date_publication-error" style="display:{{ fieldErrors.date_publication is defined ? 'block' : 'none' }};font-size:0.875rem;color:#dc2626;margin-top:2px;">{{ fieldErrors.date_publication|default('') }}</span>
                         </div>
 
                         <div style="display:grid;gap:6px;">
                             <label style="font-weight:600;color:#334155;">
                                 ID utilisateur
                             </label>
-                            <select name="id_utilisateur" id="id_utilisateur" required style="border:1px solid #d0d8e5;border-radius:12px;padding:12px;background:#fff;transition:border-color 0.2s;">
+                            <select name="id_utilisateur" id="id_utilisateur" style="border:1px solid #d0d8e5;border-radius:12px;padding:12px;background:#fff;transition:border-color 0.2s;">
                                 <option value="">Choisir utilisateur</option>
                                 {% for user in userOptions %}
                                     <option value="{{ user.id }}" {{ offre.idUtilisateur == user.id ? 'selected' : '' }}>{{ user.label }}</option>
                                 {% endfor %}
                             </select>
-                            <span id="id_utilisateur-error" style="display:none;font-size:0.875rem;color:#dc2626;margin-top:2px;"></span>
+                            <span id="id_utilisateur-error" style="display:{{ fieldErrors.id_utilisateur is defined ? 'block' : 'none' }};font-size:0.875rem;color:#dc2626;margin-top:2px;">{{ fieldErrors.id_utilisateur|default('') }}</span>
                         </div>
                     </div>
 
@@ -130,7 +134,7 @@
                                 Work preference
                             </label>
                             {% set currentWorkPreference = offre.workPreference ?? '' %}
-                            <select name="work_preference" id="work_preference" required style="border:1px solid #d0d8e5;border-radius:12px;padding:12px;background:#fff;transition:border-color 0.2s;">
+                            <select name="work_preference" id="work_preference" style="border:1px solid #d0d8e5;border-radius:12px;padding:12px;background:#fff;transition:border-color 0.2s;">
                                 <option value="">Choisir une preference</option>
                                 <option value="On-site" {{ currentWorkPreference == 'On-site' ? 'selected' : '' }}>On-site</option>
                                 <option value="Remote" {{ currentWorkPreference == 'Remote' ? 'selected' : '' }}>Remote</option>
@@ -139,14 +143,14 @@
                                     <option value="{{ currentWorkPreference }}" selected>{{ currentWorkPreference }}</option>
                                 {% endif %}
                             </select>
-                            <span id="work_preference-error" style="display:none;font-size:0.875rem;color:#dc2626;margin-top:2px;"></span>
+                            <span id="work_preference-error" style="display:{{ fieldErrors.work_preference is defined ? 'block' : 'none' }};font-size:0.875rem;color:#dc2626;margin-top:2px;">{{ fieldErrors.work_preference|default('') }}</span>
                         </div>
                         <div style="display:grid;gap:6px;">
                             <label style="font-weight:600;color:#334155;">
                                 Lieu
                             </label>
                             <input type="text" name="lieu" id="lieu" value="{{ offre.lieu ?? '' }}" maxlength="255" style="border:1px solid #d0d8e5;border-radius:12px;padding:12px;transition:border-color 0.2s;">
-                            <span id="lieu-error" style="display:none;font-size:0.875rem;color:#f59e0b;margin-top:2px;"></span>
+                            <span id="lieu-error" style="display:{{ fieldErrors.lieu is defined ? 'block' : 'none' }};font-size:0.875rem;color:#dc2626;margin-top:2px;">{{ fieldErrors.lieu|default('') }}</span>
                         </div>
                     </div>
 
@@ -189,7 +193,7 @@
 
                         // Required field validation
                         if (config.required && !value) {
-                            errorMsg = '⚠️ Ce champ est vide';
+                            errorMsg = 'Ce champ est obligatoire';
                             isValid = false;
                         }
                         // Min length validation
@@ -199,8 +203,18 @@
                         }
                         // Max length validation
                         else if (value && config.maxLength && value.length > config.maxLength) {
-                            errorMsg = `⚠️ Maximum ${config.maxLength} caractères (${value.length}/${config.maxLength})`;
+                            errorMsg = `Maximum ${config.maxLength} caracteres (${value.length}/${config.maxLength})`;
                             isValid = false;
+                        }
+                        else if (fieldName === 'date_publication' && value) {
+                            const selectedDate = new Date(value + 'T00:00:00');
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+
+                            if (selectedDate > today) {
+                                errorMsg = 'La date ne peut pas etre dans le futur';
+                                isValid = false;
+                            }
                         }
                         // Success feedback for valid filled fields
                         else if (value && isValid) {
@@ -218,7 +232,7 @@
                         // Update border color and error message
                         if (!isValid) {
                             field.style.borderColor = '#dc2626';
-                            if (showMessage && touchedFields.has(fieldName)) {
+                            if (showMessage) {
                                 error.style.display = 'block';
                                 error.textContent = errorMsg;
                                 error.style.color = '#dc2626';
@@ -266,24 +280,11 @@
                     });
 
                     // Form submission validation
-                    form.addEventListener('submit', function(e) {
-                        let isFormValid = true;
-
+                    form.addEventListener('submit', function() {
                         Object.keys(fields).forEach(fieldName => {
                             touchedFields.add(fieldName);
-                            if (!validateField(fieldName, true)) {
-                                isFormValid = false;
-                            }
+                            validateField(fieldName, true);
                         });
-
-                        if (!isFormValid) {
-                            e.preventDefault();
-                            const titleField = document.getElementById('titre');
-                            if (titleField) {
-                                titleField.focus();
-                                titleField.style.borderColor = '#dc2626';
-                            }
-                        }
                     });
                 })();
             </script>

@@ -71,8 +71,24 @@ class AuthController extends AbstractController
 
         if ($request->isMethod('POST')) {
             try {
-                $email = (string) $request->request->get('email', '');
+                $token = (string) $request->request->get('_token');
+                if (!$this->isCsrfTokenValid('signin_form', $token)) {
+                    $this->addFlash('error', 'Token invalide. Veuillez reessayer.');
+                    return $this->redirectToRoute('app_signin');
+                }
+
+                $email = trim((string) $request->request->get('email', ''));
                 $password = (string) $request->request->get('password', '');
+
+                if ($email === '' || $password === '') {
+                    $this->addFlash('error', 'Email et mot de passe sont obligatoires.');
+                    return $this->redirectToRoute('app_signin');
+                }
+
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $this->addFlash('error', 'Format email invalide.');
+                    return $this->redirectToRoute('app_signin');
+                }
 
                 $user = $userAccountService->authenticateAdmin($email, $password);
 
@@ -183,7 +199,7 @@ class AuthController extends AbstractController
         $userId = (int) $session->get('user_id', 0);
         $userRole = (string) $session->get('user_role', '');
         if ($userId > 0 && $userRole === 'CLIENT') {
-            return $this->redirectToRoute('app_client_accueil');
+            return $this->redirectToRoute('client_opportunites');
         }
 
         return null;

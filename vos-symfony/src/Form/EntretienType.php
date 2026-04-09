@@ -16,6 +16,9 @@ use Symfony\Component\Form\Extension\Core\Type\TimeType;
 use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Choice;
+use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 class EntretienType extends AbstractType
 {
@@ -51,19 +54,29 @@ class EntretienType extends AbstractType
         $builder
             ->add('dateEntretien', DateType::class, [
                 'widget' => 'single_text',
-                'required' => true,
+                'required' => false,
                 'label' => 'Date de l\'entretien',
+                'constraints' => [
+                    new NotBlank(['message' => 'La date de l entretien est obligatoire.']),
+                ],
             ])
             ->add('heureEntretien', TimeType::class, [
                 'widget' => 'single_text',
-                'required' => true,
+                'required' => false,
                 'label' => 'Heure',
+                'constraints' => [
+                    new NotBlank(['message' => 'L heure est obligatoire.']),
+                ],
             ])
             ->add('typeEntretien', ChoiceType::class, [
                 'choices' => ['RH' => 'RH', 'TECHNIQUE' => 'TECHNIQUE'],
-                'required' => true,
+                'required' => false,
                 'placeholder' => '-- Choisir --',
                 'label' => 'Type d\'entretien',
+                'constraints' => [
+                    new NotBlank(['message' => 'Le type d entretien est obligatoire.']),
+                    new Choice(['choices' => ['RH', 'TECHNIQUE']]),
+                ],
             ])
             ->add('statutEntretien', ChoiceType::class, [
                 'choices' => [
@@ -72,17 +85,29 @@ class EntretienType extends AbstractType
                     'Annulé' => 'Annulé',
                     'En attente' => 'En attente',
                 ],
-                'required' => true,
+                'required' => false,
                 'placeholder' => '-- Choisir --',
                 'label' => 'Statut',
+                'constraints' => [
+                    new NotBlank(['message' => 'Le statut est obligatoire.']),
+                    new Choice(['choices' => ['Planifié', 'Terminé', 'Annulé', 'En attente']]),
+                ],
             ])
             ->add('lieu', TextType::class, [
-                'required' => true,
+                'required' => false,
                 'label' => 'Lieu',
+                'constraints' => [
+                    new NotBlank(['message' => 'Le lieu est obligatoire.']),
+                    new Length(['min' => 2, 'max' => 100]),
+                ],
             ])
             ->add('typeTest', TextType::class, [
-                'required' => true,
+                'required' => false,
                 'label' => 'Type de test',
+                'constraints' => [
+                    new NotBlank(['message' => 'Le type de test est obligatoire.']),
+                    new Length(['min' => 2, 'max' => 100]),
+                ],
             ])
             ->add('lienReunion', UrlType::class, [
                 'required' => false,
@@ -94,12 +119,18 @@ class EntretienType extends AbstractType
                 'required' => false,
                 'placeholder' => '-- Choisir une candidature --',
                 'label' => 'Candidature',
+                'constraints' => [
+                    new NotBlank(['message' => 'La candidature est obligatoire.']),
+                ],
             ])
             ->add('idUtilisateur', ChoiceType::class, [
                 'choices' => $utilisateurChoices,
                 'required' => false,
                 'placeholder' => '-- Choisir un utilisateur --',
                 'label' => 'Utilisateur',
+                'constraints' => [
+                    new NotBlank(['message' => 'L utilisateur est obligatoire.']),
+                ],
             ])
             ->add('questionsEntretien', TextareaType::class, [
                 'required' => false,

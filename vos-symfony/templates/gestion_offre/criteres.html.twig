@@ -26,7 +26,7 @@
                     <h1 class="page-title" style="font-size:clamp(1.7rem, 2.4vw, 2.6rem);">Critères de l'offre #{{ offre.idOffre }}</h1>
                     <p class="subtitle">{{ offre.titre ?? 'Sans titre' }} - Bienvenue {{ currentUserName }}</p>
                 </div>
-                <form method="post" action="{{ path('app_logout') }}">
+                <form method="post" action="{{ path('app_logout') }}" novalidate>
                     <button class="logout-btn" type="submit">Déconnexion</button>
                 </form>
             </div>
@@ -49,32 +49,33 @@
                     <h2 style="margin:0 0 2px;font-size:1.12rem;">Ajouter un critere</h2>
                     <p style="margin:0 0 10px;color:var(--muted);font-size:0.88rem;">Ce critere sera attaché directement à l'offre sélectionnée.</p>
 
-                    <form method="post" action="{{ path('gestion_offre_critere_create') }}" style="display:grid;gap:8px;">
+                    <form method="post" action="{{ path('gestion_offre_critere_create') }}" style="display:grid;gap:8px;" novalidate>
+                        <input type="hidden" name="_token" value="{{ csrf_token('create_critere_offer') }}">
                         <input type="hidden" name="id_offre" value="{{ offre.idOffre }}">
                         <input type="hidden" name="context" value="offer">
 
                         <label style="display:grid;gap:6px;">
                             <span style="font-weight:600;color:#334155;">Niveau experience</span>
-                            <input id="niveau_experience" type="text" name="niveau_experience" required minlength="2" maxlength="50" placeholder="ex: 2 ans" style="border:1px solid #d0d8e5;border-radius:10px;padding:9px 10px;font-size:0.92rem;">
-                            <small id="niveau_experience_feedback" style="font-size:0.82rem;color:#64748b;">Saisir entre 2 et 50 caracteres.</small>
+                            <input id="niveau_experience" type="text" name="niveau_experience" value="{{ createFormData.niveau_experience|default('') }}" minlength="2" maxlength="50" placeholder="ex: 2 ans" style="border:1px solid #d0d8e5;border-radius:10px;padding:9px 10px;font-size:0.92rem;">
+                            <small id="niveau_experience_feedback" style="font-size:0.82rem;color:{{ fieldErrors.niveau_experience is defined ? '#b91c1c' : '#64748b' }};">{{ fieldErrors.niveau_experience|default('Saisir entre 2 et 50 caracteres.') }}</small>
                         </label>
 
                         <label style="display:grid;gap:6px;">
                             <span style="font-weight:600;color:#334155;">Niveau etude</span>
-                            <input id="niveau_etude" type="text" name="niveau_etude" required minlength="2" maxlength="50" placeholder="ex: Licence" style="border:1px solid #d0d8e5;border-radius:10px;padding:9px 10px;font-size:0.92rem;">
-                            <small id="niveau_etude_feedback" style="font-size:0.82rem;color:#64748b;">Saisir entre 2 et 50 caracteres.</small>
+                            <input id="niveau_etude" type="text" name="niveau_etude" value="{{ createFormData.niveau_etude|default('') }}" minlength="2" maxlength="50" placeholder="ex: Licence" style="border:1px solid #d0d8e5;border-radius:10px;padding:9px 10px;font-size:0.92rem;">
+                            <small id="niveau_etude_feedback" style="font-size:0.82rem;color:{{ fieldErrors.niveau_etude is defined ? '#b91c1c' : '#64748b' }};">{{ fieldErrors.niveau_etude|default('Saisir entre 2 et 50 caracteres.') }}</small>
                         </label>
 
                         <label style="display:grid;gap:6px;">
                             <span style="font-weight:600;color:#334155;">Competences requises</span>
-                            <textarea id="competences_requises" name="competences_requises" rows="2" required minlength="3" maxlength="2000" placeholder="ex: Java, Symfony, SQL" style="border:1px solid #d0d8e5;border-radius:10px;padding:9px 10px;resize:vertical;font-size:0.92rem;"></textarea>
-                            <small id="competences_requises_feedback" style="font-size:0.82rem;color:#64748b;">Saisir entre 3 et 2000 caracteres.</small>
+                            <textarea id="competences_requises" name="competences_requises" rows="2" minlength="3" maxlength="2000" placeholder="ex: Java, Symfony, SQL" style="border:1px solid #d0d8e5;border-radius:10px;padding:9px 10px;resize:vertical;font-size:0.92rem;">{{ createFormData.competences_requises|default('') }}</textarea>
+                            <small id="competences_requises_feedback" style="font-size:0.82rem;color:{{ fieldErrors.competences_requises is defined ? '#b91c1c' : '#64748b' }};">{{ fieldErrors.competences_requises|default('Saisir entre 3 et 2000 caracteres.') }}</small>
                         </label>
 
                         <label style="display:grid;gap:6px;">
                             <span style="font-weight:600;color:#334155;">Responsibilities</span>
-                            <textarea id="responsibilities" name="responsibilities" rows="2" required minlength="3" maxlength="2000" placeholder="ex: Developper API, corriger bugs, tests" style="border:1px solid #d0d8e5;border-radius:10px;padding:9px 10px;resize:vertical;font-size:0.92rem;"></textarea>
-                            <small id="responsibilities_feedback" style="font-size:0.82rem;color:#64748b;">Saisir entre 3 et 2000 caracteres.</small>
+                            <textarea id="responsibilities" name="responsibilities" rows="2" minlength="3" maxlength="2000" placeholder="ex: Developper API, corriger bugs, tests" style="border:1px solid #d0d8e5;border-radius:10px;padding:9px 10px;resize:vertical;font-size:0.92rem;">{{ createFormData.responsibilities|default('') }}</textarea>
+                            <small id="responsibilities_feedback" style="font-size:0.82rem;color:{{ fieldErrors.responsibilities is defined ? '#b91c1c' : '#64748b' }};">{{ fieldErrors.responsibilities|default('Saisir entre 3 et 2000 caracteres.') }}</small>
                         </label>
 
                         <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -126,7 +127,7 @@
                                                 data-responsibilities="{{ (critere.responsibilities ?? '')|e('html_attr') }}"
                                                 style="display:inline-flex;padding:8px 12px;border-radius:10px;background:#1d4ed8;color:#fff;font-weight:700;margin-right:8px;border:0;cursor:pointer;"
                                             >Modifier</button>
-                                            <form method="post" action="{{ path('gestion_offre_critere_delete', {idCritere: critere.idCritere}) }}" style="display:inline;" onsubmit="return confirm('Supprimer ce critere ?');">
+                                            <form method="post" action="{{ path('gestion_offre_critere_delete', {idCritere: critere.idCritere}) }}" style="display:inline;" onsubmit="return confirm('Supprimer ce critere ?');" novalidate>
                                                 <input type="hidden" name="_token" value="{{ csrf_token('delete_critere_' ~ critere.idCritere) }}">
                                                 <button type="submit" style="display:inline-flex;padding:8px 14px;border-radius:10px;background:#fee2e2;color:#b91c1c;font-weight:700;border:0;cursor:pointer;">Supprimer</button>
                                             </form>
@@ -151,27 +152,27 @@
                 <h3 style="margin:0;font-size:1.18rem;">Modifier critere</h3>
                 <button id="close-edit-critere-modal" type="button" style="border:0;background:#e2e8f0;color:#0f172a;border-radius:8px;padding:6px 10px;cursor:pointer;font-weight:700;">X</button>
             </div>
-            <form id="edit-critere-form" method="post" style="display:grid;gap:10px;padding:14px 16px 16px;">
+            <form id="edit-critere-form" method="post" style="display:grid;gap:10px;padding:14px 16px 16px;" novalidate>
                 <input id="edit-critere-token" type="hidden" name="_token" value="">
 
                 <label style="display:grid;gap:6px;">
                     <span style="font-weight:600;color:#334155;">Niveau experience</span>
-                    <input id="edit-niveau-experience" type="text" name="niveau_experience" required minlength="2" maxlength="50" style="border:1px solid #d0d8e5;border-radius:10px;padding:10px 12px;">
+                    <input id="edit-niveau-experience" type="text" name="niveau_experience" minlength="2" maxlength="50" style="border:1px solid #d0d8e5;border-radius:10px;padding:10px 12px;">
                 </label>
 
                 <label style="display:grid;gap:6px;">
                     <span style="font-weight:600;color:#334155;">Niveau etude</span>
-                    <input id="edit-niveau-etude" type="text" name="niveau_etude" required minlength="2" maxlength="50" style="border:1px solid #d0d8e5;border-radius:10px;padding:10px 12px;">
+                    <input id="edit-niveau-etude" type="text" name="niveau_etude" minlength="2" maxlength="50" style="border:1px solid #d0d8e5;border-radius:10px;padding:10px 12px;">
                 </label>
 
                 <label style="display:grid;gap:6px;">
                     <span style="font-weight:600;color:#334155;">Competences requises</span>
-                    <textarea id="edit-competences" name="competences_requises" rows="3" required minlength="3" maxlength="2000" style="border:1px solid #d0d8e5;border-radius:10px;padding:10px 12px;resize:vertical;"></textarea>
+                    <textarea id="edit-competences" name="competences_requises" rows="3" minlength="3" maxlength="2000" style="border:1px solid #d0d8e5;border-radius:10px;padding:10px 12px;resize:vertical;"></textarea>
                 </label>
 
                 <label style="display:grid;gap:6px;">
                     <span style="font-weight:600;color:#334155;">Responsibilities</span>
-                    <textarea id="edit-responsibilities" name="responsibilities" rows="3" required minlength="3" maxlength="2000" style="border:1px solid #d0d8e5;border-radius:10px;padding:10px 12px;resize:vertical;"></textarea>
+                    <textarea id="edit-responsibilities" name="responsibilities" rows="3" minlength="3" maxlength="2000" style="border:1px solid #d0d8e5;border-radius:10px;padding:10px 12px;resize:vertical;"></textarea>
                 </label>
 
                 <div style="display:flex;gap:8px;justify-content:flex-end;">

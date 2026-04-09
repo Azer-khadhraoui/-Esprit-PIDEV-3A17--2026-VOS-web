@@ -78,7 +78,7 @@
 
         <section class="table-card edit-page-card">
             <h2>{{ user.prenom }} {{ user.nom }}</h2>
-            {{ form_start(editForm, {'attr': {'class': 'admin-edit-form'}}) }}
+            {{ form_start(editForm, {'attr': {'class': 'admin-edit-form', 'novalidate': 'novalidate'}}) }}
                 <div class="edit-layout">
                     <aside class="edit-profile-panel">
                         <h3>Photo de profil</h3>

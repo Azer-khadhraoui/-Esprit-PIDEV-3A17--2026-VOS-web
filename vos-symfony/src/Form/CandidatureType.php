@@ -10,6 +10,9 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\PositiveOrZero;
+use Symfony\Component\Validator\Constraints\Range;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
 class CandidatureType extends AbstractType
@@ -22,7 +25,7 @@ class CandidatureType extends AbstractType
             ->add('cv', FileType::class, [
                 'label' => 'CV (PDF)',
                 'mapped' => false,
-                'required' => !$isEdit,
+                'required' => false,
                 'constraints' => $isEdit
                     ? []
                     : [new NotBlank(['message' => 'Le CV est obligatoire.'])],
@@ -31,7 +34,7 @@ class CandidatureType extends AbstractType
             ->add('lettre_motivation', FileType::class, [
                 'label' => 'Lettre de Motivation (PDF)',
                 'mapped' => false,
-                'required' => !$isEdit,
+                'required' => false,
                 'constraints' => $isEdit
                     ? []
                     : [new NotBlank(['message' => 'La lettre de motivation est obligatoire.'])],
@@ -47,17 +50,27 @@ class CandidatureType extends AbstractType
                     'Expert'   => 'Expert',
                 ],
                 'placeholder' => '-- Choisir --',
-                'required' => true,
+                'required' => false,
+                'constraints' => [new NotBlank(['message' => 'Le niveau d experience est obligatoire.'])],
             ])
             ->add('annees_experience', IntegerType::class, [
                 'label' => 'Années d\'Expérience',
                 'attr'  => ['min' => 0, 'max' => 50, 'placeholder' => 'Ex: 3'],
-                'required' => true,
+                'required' => false,
+                'constraints' => [
+                    new NotBlank(['message' => 'Les annees d experience sont obligatoires.']),
+                    new PositiveOrZero(),
+                    new Range(['max' => 50]),
+                ],
             ])
             ->add('domaine_experience', TextType::class, [
                 'label' => 'Domaine d\'Expérience',
                 'attr'  => ['placeholder' => 'Ex: Cloud Computing, Développement Web...'],
-                'required' => true,
+                'required' => false,
+                'constraints' => [
+                    new NotBlank(['message' => 'Le domaine d experience est obligatoire.']),
+                    new Length(['min' => 2, 'max' => 100]),
+                ],
             ])
             ->add('dernier_poste', TextType::class, [
                 'label'    => 'Dernier Poste',

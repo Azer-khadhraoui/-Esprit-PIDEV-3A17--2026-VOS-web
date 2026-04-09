@@ -18,7 +18,7 @@
         {% if isAuthenticated %}
             <div class="vos-auth-menu">
                 <a href="{{ path('app_client_profile') }}" class="nav-link">Mon profil</a>
-                <form method="post" action="{{ path('app_logout') }}" style="display: inline;">
+                <form method="post" action="{{ path('app_logout') }}" style="display: inline;" novalidate>
                     <button type="submit" class="btn-logout">Déconnexion</button>
                 </form>
             </div>

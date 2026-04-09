@@ -195,21 +195,35 @@ class GestionOffreController extends AbstractController
     {
         $offre = new OffreEmploi();
         $userOptions = $this->getUserOptions($entityManager);
+        $csrfTokenId = 'offre_form_new';
 
         if ($request->isMethod('POST')) {
-            $this->hydrateOffreFromRequest($offre, $request);
-            $errors = $this->validateOffreInput($offre, $entityManager);
-
-            if ($errors !== []) {
-                foreach ($errors as $error) {
-                    $this->addFlash('error', $error);
-                }
+            $token = (string) $request->request->get('_token');
+            if (!$this->isCsrfTokenValid($csrfTokenId, $token)) {
+                $this->addFlash('error', 'Token invalide. Veuillez reessayer.');
 
                 return $this->render('gestion_offre/offre_form.html.twig', [
                     'offre' => $offre,
                     'pageTitle' => 'Ajouter Offre',
                     'submitLabel' => 'Ajouter',
                     'userOptions' => $userOptions,
+                    'fieldErrors' => ['_form' => 'Token invalide. Veuillez reessayer.'],
+                    'csrfTokenId' => $csrfTokenId,
+                    'currentUserName' => 'khadhraoui azer',
+                ]);
+            }
+
+            $this->hydrateOffreFromRequest($offre, $request);
+            $errors = $this->validateOffreInput($offre, $entityManager);
+
+            if ($errors !== []) {
+                return $this->render('gestion_offre/offre_form.html.twig', [
+                    'offre' => $offre,
+                    'pageTitle' => 'Ajouter Offre',
+                    'submitLabel' => 'Ajouter',
+                    'userOptions' => $userOptions,
+                    'fieldErrors' => $errors,
+                    'csrfTokenId' => $csrfTokenId,
                     'currentUserName' => 'khadhraoui azer',
                 ]);
             }
@@ -227,6 +241,8 @@ class GestionOffreController extends AbstractController
             'pageTitle' => 'Ajouter Offre',
             'submitLabel' => 'Ajouter',
             'userOptions' => $userOptions,
+            'fieldErrors' => [],
+            'csrfTokenId' => $csrfTokenId,
             'currentUserName' => 'khadhraoui azer',
         ]);
     }
@@ -238,21 +254,35 @@ class GestionOffreController extends AbstractController
         EntityManagerInterface $entityManager,
     ): Response {
         $userOptions = $this->getUserOptions($entityManager);
+        $csrfTokenId = 'offre_form_edit_'.$offre->getIdOffre();
 
         if ($request->isMethod('POST')) {
-            $this->hydrateOffreFromRequest($offre, $request);
-            $errors = $this->validateOffreInput($offre, $entityManager);
-
-            if ($errors !== []) {
-                foreach ($errors as $error) {
-                    $this->addFlash('error', $error);
-                }
+            $token = (string) $request->request->get('_token');
+            if (!$this->isCsrfTokenValid($csrfTokenId, $token)) {
+                $this->addFlash('error', 'Token invalide. Veuillez reessayer.');
 
                 return $this->render('gestion_offre/offre_form.html.twig', [
                     'offre' => $offre,
                     'pageTitle' => 'Modifier Offre',
                     'submitLabel' => 'Mettre a jour',
                     'userOptions' => $userOptions,
+                    'fieldErrors' => ['_form' => 'Token invalide. Veuillez reessayer.'],
+                    'csrfTokenId' => $csrfTokenId,
+                    'currentUserName' => 'khadhraoui azer',
+                ]);
+            }
+
+            $this->hydrateOffreFromRequest($offre, $request);
+            $errors = $this->validateOffreInput($offre, $entityManager);
+
+            if ($errors !== []) {
+                return $this->render('gestion_offre/offre_form.html.twig', [
+                    'offre' => $offre,
+                    'pageTitle' => 'Modifier Offre',
+                    'submitLabel' => 'Mettre a jour',
+                    'userOptions' => $userOptions,
+                    'fieldErrors' => $errors,
+                    'csrfTokenId' => $csrfTokenId,
                     'currentUserName' => 'khadhraoui azer',
                 ]);
             }
@@ -269,6 +299,8 @@ class GestionOffreController extends AbstractController
             'pageTitle' => 'Modifier Offre',
             'submitLabel' => 'Mettre a jour',
             'userOptions' => $userOptions,
+            'fieldErrors' => [],
+            'csrfTokenId' => $csrfTokenId,
             'currentUserName' => 'khadhraoui azer',
         ]);
     }
@@ -301,6 +333,13 @@ class GestionOffreController extends AbstractController
     #[Route('/gestion-offre/critere/create', name: 'gestion_offre_critere_create', methods: ['POST'])]
     public function createCritere(Request $request, EntityManagerInterface $entityManager): Response
     {
+        $token = (string) $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('create_critere_offer', $token)) {
+            $this->addFlash('error', 'Token invalide. Veuillez reessayer.');
+
+            return $this->redirectToRoute('gestion_offre_dashboard');
+        }
+
         $offerId = (int) $request->request->get('id_offre');
         $offre = $entityManager->getRepository(OffreEmploi::class)->find($offerId);
 
@@ -323,12 +362,24 @@ class GestionOffreController extends AbstractController
         );
 
         if ($errors !== []) {
-            foreach ($errors as $error) {
-                $this->addFlash('error', $error);
-            }
-
             if ($request->request->get('context') === 'offer') {
-                return $this->redirectToRoute('gestion_offre_criteres', ['idOffre' => $offre->getIdOffre()]);
+                $criteria = $entityManager->getRepository(CritereOffre::class)->findBy(
+                    ['offreEmploi' => $offre],
+                    ['idCritere' => 'DESC'],
+                );
+
+                return $this->render('gestion_offre/criteres.html.twig', [
+                    'offre' => $offre,
+                    'criteria' => $criteria,
+                    'fieldErrors' => $errors,
+                    'createFormData' => [
+                        'niveau_experience' => $niveauExperience,
+                        'niveau_etude' => $niveauEtude,
+                        'competences_requises' => $competencesRequises,
+                        'responsibilities' => $responsibilities,
+                    ],
+                    'currentUserName' => 'khadhraoui azer',
+                ]);
             }
 
             return $this->redirectToRoute('gestion_offre_dashboard');
@@ -390,10 +441,6 @@ class GestionOffreController extends AbstractController
             );
 
             if ($errors !== []) {
-                foreach ($errors as $error) {
-                    $this->addFlash('error', $error);
-                }
-
                 $this->hydrateCritereFromValues(
                     $critere,
                     $niveauExperience,
@@ -405,6 +452,7 @@ class GestionOffreController extends AbstractController
                 return $this->render('gestion_offre/critere_form.html.twig', [
                     'offre' => $offre,
                     'critere' => $critere,
+                    'fieldErrors' => $errors,
                     'pageTitle' => 'Modifier critere',
                     'submitLabel' => 'Mettre a jour',
                     'currentUserName' => 'khadhraoui azer',
@@ -429,6 +477,7 @@ class GestionOffreController extends AbstractController
         return $this->render('gestion_offre/critere_form.html.twig', [
             'offre' => $offre,
             'critere' => $critere,
+            'fieldErrors' => [],
             'pageTitle' => 'Modifier critere',
             'submitLabel' => 'Mettre a jour',
             'currentUserName' => 'khadhraoui azer',
@@ -480,6 +529,8 @@ class GestionOffreController extends AbstractController
         return $this->render('gestion_offre/criteres.html.twig', [
             'offre' => $offre,
             'criteria' => $criteria,
+            'fieldErrors' => [],
+            'createFormData' => [],
             'currentUserName' => 'khadhraoui azer',
         ]);
     }
@@ -530,44 +581,55 @@ class GestionOffreController extends AbstractController
 
         $titre = $offre->getTitre();
         if ($titre === null || mb_strlen($titre) < 3) {
-            $errors[] = 'Le titre est obligatoire et doit contenir au moins 3 caracteres.';
+            $errors['titre'] = 'Le titre est obligatoire et doit contenir au moins 3 caracteres.';
+        }
+        if ($titre !== null && mb_strlen($titre) > 100) {
+            $errors['titre'] = 'Le titre ne doit pas depasser 100 caracteres.';
         }
 
         $allowedTypeContrat = ['CDI', 'CDD', 'Stage', 'Alternance', 'Freelance'];
         $typeContrat = $offre->getTypeContrat();
         if ($typeContrat === null || !in_array($typeContrat, $allowedTypeContrat, true)) {
-            $errors[] = 'Type contrat invalide. Choisissez une valeur de la liste.';
+            $errors['type_contrat'] = 'Type contrat invalide. Choisissez une valeur de la liste.';
         }
 
         $allowedStatut = ['OUVERTE', 'FERMEE', 'INACTIVE'];
         $statut = $offre->getStatutOffre();
         if ($statut === null || !in_array($statut, $allowedStatut, true)) {
-            $errors[] = 'Statut invalide. Choisissez une valeur de la liste.';
+            $errors['statut_offre'] = 'Statut invalide. Choisissez une valeur de la liste.';
         }
 
         $allowedWorkPreference = ['On-site', 'Remote', 'Hybrid'];
         $workPreference = $offre->getWorkPreference();
         if ($workPreference === null || !in_array($workPreference, $allowedWorkPreference, true)) {
-            $errors[] = 'Work preference invalide. Choisissez une valeur de la liste.';
+            $errors['work_preference'] = 'Work preference invalide. Choisissez une valeur de la liste.';
         }
 
         if ($offre->getDatePublication() === null) {
-            $errors[] = 'La date de publication est obligatoire.';
+            $errors['date_publication'] = 'La date de publication est obligatoire.';
+        } elseif ($offre->getDatePublication() > new \DateTime('today +1 day')) {
+            $errors['date_publication'] = 'La date de publication ne peut pas etre dans le futur.';
         }
 
         $idUtilisateur = $offre->getIdUtilisateur();
         if ($idUtilisateur === null || !$this->userExists($entityManager, $idUtilisateur)) {
-            $errors[] = 'Veuillez choisir un utilisateur existant.';
+            $errors['id_utilisateur'] = 'Veuillez choisir un utilisateur existant.';
         }
 
         $lieu = $offre->getLieu();
+        if ($lieu !== null && mb_strlen($lieu) < 3) {
+            $errors['lieu'] = 'Le lieu doit contenir au moins 3 caracteres.';
+        }
         if ($lieu !== null && mb_strlen($lieu) > 255) {
-            $errors[] = 'Le lieu ne doit pas depasser 255 caracteres.';
+            $errors['lieu'] = 'Le lieu ne doit pas depasser 255 caracteres.';
         }
 
         $description = $offre->getDescription();
+        if ($description !== null && mb_strlen($description) < 10) {
+            $errors['description'] = 'La description doit contenir au moins 10 caracteres.';
+        }
         if ($description !== null && mb_strlen($description) > 5000) {
-            $errors[] = 'La description est trop longue (max 5000 caracteres).';
+            $errors['description'] = 'La description est trop longue (max 5000 caracteres).';
         }
 
         return $errors;
@@ -635,7 +697,7 @@ class GestionOffreController extends AbstractController
     }
 
     /**
-     * @return list<string>
+     * @return array<string, string>
      */
     private function validateCritereInput(
         ?string $niveauExperience,
@@ -646,19 +708,19 @@ class GestionOffreController extends AbstractController
         $errors = [];
 
         if ($niveauExperience === null || mb_strlen($niveauExperience) < 2 || mb_strlen($niveauExperience) > 50) {
-            $errors[] = 'Niveau experience obligatoire (2-50 caracteres).';
+            $errors['niveau_experience'] = 'Niveau experience obligatoire (2-50 caracteres).';
         }
 
         if ($niveauEtude === null || mb_strlen($niveauEtude) < 2 || mb_strlen($niveauEtude) > 50) {
-            $errors[] = 'Niveau etude obligatoire (2-50 caracteres).';
+            $errors['niveau_etude'] = 'Niveau etude obligatoire (2-50 caracteres).';
         }
 
         if ($competencesRequises === null || mb_strlen($competencesRequises) < 3 || mb_strlen($competencesRequises) > 2000) {
-            $errors[] = 'Competences requises obligatoires (3-2000 caracteres).';
+            $errors['competences_requises'] = 'Competences requises obligatoires (3-2000 caracteres).';
         }
 
         if ($responsibilities === null || mb_strlen($responsibilities) < 3 || mb_strlen($responsibilities) > 2000) {
-            $errors[] = 'Responsibilities obligatoires (3-2000 caracteres).';
+            $errors['responsibilities'] = 'Responsibilities obligatoires (3-2000 caracteres).';
         }
 
         return $errors;

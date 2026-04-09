@@ -28,7 +28,7 @@
         </div>
 
         <div style="padding:0 24px 24px;">
-            <form method="post" action="{{ path('app_evaluation_entretien_delete', {id: evaluation_entretien.id}) }}" onsubmit="return confirm('Supprimer cette évaluation ?');">
+            <form method="post" action="{{ path('app_evaluation_entretien_delete', {id: evaluation_entretien.id}) }}" onsubmit="return confirm('Supprimer cette évaluation ?');" novalidate>
                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ evaluation_entretien.id) }}">
                 <button class="btn btn-danger" type="submit">Supprimer</button>
             </form>

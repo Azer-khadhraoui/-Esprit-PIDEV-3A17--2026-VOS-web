@@ -249,7 +249,7 @@
                 <h1 class="page-title">Gestion Entretiens</h1>
                 <p class="subtitle">Bienvenue {{ app.session.get('admin_user_name') ?: 'Admin' }}</p>
             </div>
-            <form method="post" action="{{ path('app_logout') }}">
+            <form method="post" action="{{ path('app_logout') }}" novalidate>
                 <button class="logout-btn" type="submit">Déconnexion</button>
             </form>
         </header>

@@ -31,7 +31,7 @@
                 <h1>Gestion Candidatures</h1>
                 <p>Bienvenue {{ adminName }}</p>
             </div>
-            <form method="post" action="{{ path('app_logout') }}">
+            <form method="post" action="{{ path('app_logout') }}" novalidate>
                 <button class="btn-logout" type="submit">Déconnexion</button>
             </form>
         </header>
@@ -103,7 +103,7 @@
                             <td>
                                 <div class="actions">
                                     <a class="btn-edit" href="{{ path('app_admin_candidature_edit', {id: candidature.idCandidature}) }}">Modifier</a>
-                                    <form method="post" action="{{ path('app_admin_candidature_delete', {id: candidature.idCandidature}) }}" onsubmit="return confirm('Supprimer cette candidature ?');" style="display: inline;">
+                                    <form method="post" action="{{ path('app_admin_candidature_delete', {id: candidature.idCandidature}) }}" onsubmit="return confirm('Supprimer cette candidature ?');" style="display: inline;" novalidate>
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete_candidature_' ~ candidature.idCandidature) }}">
                                         <button class="btn-delete" type="submit">Supprimer</button>
                                     </form>

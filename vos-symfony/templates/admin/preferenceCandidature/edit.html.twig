@@ -31,7 +31,7 @@
                 <h1>Modifier Préférence</h1>
                 <p>Bienvenue {{ adminName }}</p>
             </div>
-            <form method="post" action="{{ path('app_logout') }}">
+            <form method="post" action="{{ path('app_logout') }}" novalidate>
                 <button class="btn-logout" type="submit">Déconnexion</button>
             </form>
         </header>
@@ -49,7 +49,11 @@
             </div>
 
             <div class="form-section">
-                <form method="POST">
+                <form method="POST" novalidate>
+                    <input type="hidden" name="_token" value="{{ csrf_token('edit_preference_' ~ preference.idPreference) }}">
+                    {% if fieldErrors._form is defined %}
+                        <div class="flash flash-error" style="margin-bottom:12px;">{{ fieldErrors._form }}</div>
+                    {% endif %}
                     <div class="form-row">
                         <div class="form-group">
                             <label>Utilisateur</label>
@@ -64,7 +68,10 @@
 
                         <div class="form-group">
                             <label for="type_poste">Type de Poste Souhaité</label>
-                            <input type="text" id="type_poste" name="type_poste_souhaite" value="{{ preference.typePosteSouhaite ?? '' }}" class="form-input">
+                            <input type="text" id="type_poste" name="type_poste_souhaite" value="{{ formValues.type_poste_souhaite|default(preference.typePosteSouhaite ?? '') }}" class="form-input">
+                            {% if fieldErrors.type_poste_souhaite is defined %}
+                                <small style="color:#b91c1c;font-size:0.82rem;margin-top:4px;">{{ fieldErrors.type_poste_souhaite }}</small>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -73,38 +80,50 @@
                             <label for="mode_travail">Mode de Travail</label>
                             <select id="mode_travail" name="mode_travail" class="form-select">
                                 <option value="">-- Sélectionnez --</option>
-                                <option value="100% Présentiel" {% if preference.modeTravail == '100% Présentiel' %}selected{% endif %}>100% Présentiel</option>
-                                <option value="100% Télétravail" {% if preference.modeTravail == '100% Télétravail' %}selected{% endif %}>100% Télétravail</option>
-                                <option value="Hybride" {% if preference.modeTravail == 'Hybride' %}selected{% endif %}>Hybride</option>
+                                <option value="100% Présentiel" {{ formValues.mode_travail|default(preference.modeTravail ?? '') == '100% Présentiel' ? 'selected' : '' }}>100% Présentiel</option>
+                                <option value="100% Télétravail" {{ formValues.mode_travail|default(preference.modeTravail ?? '') == '100% Télétravail' ? 'selected' : '' }}>100% Télétravail</option>
+                                <option value="Hybride" {{ formValues.mode_travail|default(preference.modeTravail ?? '') == 'Hybride' ? 'selected' : '' }}>Hybride</option>
                             </select>
+                            {% if fieldErrors.mode_travail is defined %}
+                                <small style="color:#b91c1c;font-size:0.82rem;margin-top:4px;">{{ fieldErrors.mode_travail }}</small>
+                            {% endif %}
                         </div>
 
                         <div class="form-group">
                             <label for="disponibilite">Disponibilité</label>
                             <select id="disponibilite" name="disponibilite" class="form-select">
                                 <option value="">-- Sélectionnez --</option>
-                                <option value="Immédiatement" {% if preference.disponibilite == 'Immédiatement' %}selected{% endif %}>Immédiatement</option>
-                                <option value="Dans 1 mois" {% if preference.disponibilite == 'Dans 1 mois' %}selected{% endif %}>Dans 1 mois</option>
-                                <option value="Dans 3 mois" {% if preference.disponibilite == 'Dans 3 mois' %}selected{% endif %}>Dans 3 mois</option>
-                                <option value="Dans 6 mois" {% if preference.disponibilite == 'Dans 6 mois' %}selected{% endif %}>Dans 6 mois</option>
+                                <option value="Immédiatement" {{ formValues.disponibilite|default(preference.disponibilite ?? '') == 'Immédiatement' ? 'selected' : '' }}>Immédiatement</option>
+                                <option value="Dans 1 mois" {{ formValues.disponibilite|default(preference.disponibilite ?? '') == 'Dans 1 mois' ? 'selected' : '' }}>Dans 1 mois</option>
+                                <option value="Dans 3 mois" {{ formValues.disponibilite|default(preference.disponibilite ?? '') == 'Dans 3 mois' ? 'selected' : '' }}>Dans 3 mois</option>
+                                <option value="Dans 6 mois" {{ formValues.disponibilite|default(preference.disponibilite ?? '') == 'Dans 6 mois' ? 'selected' : '' }}>Dans 6 mois</option>
                             </select>
+                            {% if fieldErrors.disponibilite is defined %}
+                                <small style="color:#b91c1c;font-size:0.82rem;margin-top:4px;">{{ fieldErrors.disponibilite }}</small>
+                            {% endif %}
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label for="date_disponibilite">Date de Disponibilité</label>
-                            <input type="date" id="date_disponibilite" name="date_disponibilite" value="{{ preference.dateDisponibilite ? preference.dateDisponibilite|date('Y-m-d') : '' }}" class="form-input">
+                            <input type="date" id="date_disponibilite" name="date_disponibilite" value="{{ formValues.date_disponibilite|default(preference.dateDisponibilite ? preference.dateDisponibilite|date('Y-m-d') : '') }}" class="form-input">
+                            {% if fieldErrors.date_disponibilite is defined %}
+                                <small style="color:#b91c1c;font-size:0.82rem;margin-top:4px;">{{ fieldErrors.date_disponibilite }}</small>
+                            {% endif %}
                         </div>
 
                         <div class="form-group">
                             <label for="mobilite">Mobilité Géographique</label>
                             <select id="mobilite" name="mobilite_geographique" class="form-select">
                                 <option value="">-- Sélectionnez --</option>
-                                <option value="Oui, national" {% if preference.mobiliteGeographique == 'Oui, national' %}selected{% endif %}>Oui, national</option>
-                                <option value="Oui, région" {% if preference.mobiliteGeographique == 'Oui, région' %}selected{% endif %}>Oui, région</option>
-                                <option value="Non" {% if preference.mobiliteGeographique == 'Non' %}selected{% endif %}>Non</option>
+                                <option value="Oui, national" {{ formValues.mobilite_geographique|default(preference.mobiliteGeographique ?? '') == 'Oui, national' ? 'selected' : '' }}>Oui, national</option>
+                                <option value="Oui, région" {{ formValues.mobilite_geographique|default(preference.mobiliteGeographique ?? '') == 'Oui, région' ? 'selected' : '' }}>Oui, région</option>
+                                <option value="Non" {{ formValues.mobilite_geographique|default(preference.mobiliteGeographique ?? '') == 'Non' ? 'selected' : '' }}>Non</option>
                             </select>
+                            {% if fieldErrors.mobilite_geographique is defined %}
+                                <small style="color:#b91c1c;font-size:0.82rem;margin-top:4px;">{{ fieldErrors.mobilite_geographique }}</small>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -113,22 +132,28 @@
                             <label for="pret_deplacement">Prêt au Déplacement</label>
                             <select id="pret_deplacement" name="pret_deplacement" class="form-select">
                                 <option value="">-- Sélectionnez --</option>
-                                <option value="Jamais" {% if preference.pretDeplacement == 'Jamais' %}selected{% endif %}>Jamais</option>
-                                <option value="Occasionnel" {% if preference.pretDeplacement == 'Occasionnel' %}selected{% endif %}>Occasionnel</option>
-                                <option value="Fréquent" {% if preference.pretDeplacement == 'Fréquent' %}selected{% endif %}>Fréquent</option>
+                                <option value="Jamais" {{ formValues.pret_deplacement|default(preference.pretDeplacement ?? '') == 'Jamais' ? 'selected' : '' }}>Jamais</option>
+                                <option value="Occasionnel" {{ formValues.pret_deplacement|default(preference.pretDeplacement ?? '') == 'Occasionnel' ? 'selected' : '' }}>Occasionnel</option>
+                                <option value="Fréquent" {{ formValues.pret_deplacement|default(preference.pretDeplacement ?? '') == 'Fréquent' ? 'selected' : '' }}>Fréquent</option>
                             </select>
+                            {% if fieldErrors.pret_deplacement is defined %}
+                                <small style="color:#b91c1c;font-size:0.82rem;margin-top:4px;">{{ fieldErrors.pret_deplacement }}</small>
+                            {% endif %}
                         </div>
 
                         <div class="form-group">
                             <label for="type_contrat">Type de Contrat Souhaité</label>
                             <select id="type_contrat" name="type_contrat_souhaite" class="form-select">
                                 <option value="">-- Sélectionnez --</option>
-                                <option value="CDI" {% if preference.typeContratSouhaite == 'CDI' %}selected{% endif %}>CDI</option>
-                                <option value="CDD" {% if preference.typeContratSouhaite == 'CDD' %}selected{% endif %}>CDD</option>
-                                <option value="Stage" {% if preference.typeContratSouhaite == 'Stage' %}selected{% endif %}>Stage</option>
-                                <option value="Alternance" {% if preference.typeContratSouhaite == 'Alternance' %}selected{% endif %}>Alternance</option>
-                                <option value="Freelance" {% if preference.typeContratSouhaite == 'Freelance' %}selected{% endif %}>Freelance</option>
+                                <option value="CDI" {{ formValues.type_contrat_souhaite|default(preference.typeContratSouhaite ?? '') == 'CDI' ? 'selected' : '' }}>CDI</option>
+                                <option value="CDD" {{ formValues.type_contrat_souhaite|default(preference.typeContratSouhaite ?? '') == 'CDD' ? 'selected' : '' }}>CDD</option>
+                                <option value="Stage" {{ formValues.type_contrat_souhaite|default(preference.typeContratSouhaite ?? '') == 'Stage' ? 'selected' : '' }}>Stage</option>
+                                <option value="Alternance" {{ formValues.type_contrat_souhaite|default(preference.typeContratSouhaite ?? '') == 'Alternance' ? 'selected' : '' }}>Alternance</option>
+                                <option value="Freelance" {{ formValues.type_contrat_souhaite|default(preference.typeContratSouhaite ?? '') == 'Freelance' ? 'selected' : '' }}>Freelance</option>
                             </select>
+                            {% if fieldErrors.type_contrat_souhaite is defined %}
+                                <small style="color:#b91c1c;font-size:0.82rem;margin-top:4px;">{{ fieldErrors.type_contrat_souhaite }}</small>
+                            {% endif %}
                         </div>
                     </div>
 

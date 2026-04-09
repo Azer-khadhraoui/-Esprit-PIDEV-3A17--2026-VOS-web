@@ -10,7 +10,7 @@
         </nav>
         <div class="header-actions">
             <a href="{{ path('app_client_profile') }}" class="signup">{{ userName|default('Utilisateur') }}</a>
-            <form method="post" action="{{ path('app_logout') }}" style="margin: 0;">
+            <form method="post" action="{{ path('app_logout') }}" style="margin: 0;" novalidate>
                 <button class="logout-btn" type="submit">Déconnexion</button>
             </form>
         </div>

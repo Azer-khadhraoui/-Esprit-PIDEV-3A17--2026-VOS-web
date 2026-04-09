@@ -373,7 +373,7 @@
                         <form method="post"
                               action="{{ path('app_client_candidature_delete', {id_candidature: c.idCandidature}) }}"
                               onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette candidature ?');"
-                              style="display:inline-flex;">
+                              style="display:inline-flex;" novalidate>
                             <input type="hidden" name="_token"
                                    value="{{ csrf_token('delete' ~ c.idCandidature) }}">
                             <button type="submit" class="icon-btn" title="Supprimer">

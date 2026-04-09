@@ -12,7 +12,7 @@
         </div>
 
         <div class="form-shell">
-            {{ form_start(form) }}
+            {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
             <div class="form-layout">
                 <div class="form-field">{{ form_row(form.dateEntretien) }}</div>
                 <div class="form-field">{{ form_row(form.heureEntretien) }}</div>

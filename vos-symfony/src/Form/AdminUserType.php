@@ -10,6 +10,10 @@ use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Choice;
+use Symfony\Component\Validator\Constraints\Email;
+use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 class AdminUserType extends AbstractType
 {
@@ -18,12 +22,27 @@ class AdminUserType extends AbstractType
         $builder
             ->add('nom', TextType::class, [
                 'label' => 'Nom',
+                'required' => false,
+                'constraints' => [
+                    new NotBlank(['message' => 'Le nom est obligatoire.']),
+                    new Length(['min' => 2, 'max' => 50]),
+                ],
             ])
             ->add('prenom', TextType::class, [
                 'label' => 'Prénom',
+                'required' => false,
+                'constraints' => [
+                    new NotBlank(['message' => 'Le prenom est obligatoire.']),
+                    new Length(['min' => 2, 'max' => 50]),
+                ],
             ])
             ->add('email', EmailType::class, [
                 'label' => 'Email',
+                'required' => false,
+                'constraints' => [
+                    new NotBlank(['message' => 'L email est obligatoire.']),
+                    new Email(['message' => 'Email invalide.']),
+                ],
             ])
             ->add('imageFile', FileType::class, [
                 'label' => 'Image de profil',
@@ -36,6 +55,11 @@ class AdminUserType extends AbstractType
                     'Client' => 'CLIENT',
                     'Admin RH' => 'ADMIN_RH',
                     'Admin Technique' => 'ADMIN_TECHNIQUE',
+                ],
+                'required' => false,
+                'constraints' => [
+                    new NotBlank(['message' => 'Le role est obligatoire.']),
+                    new Choice(['choices' => ['CLIENT', 'ADMIN_RH', 'ADMIN_TECHNIQUE']]),
                 ],
             ]);
     }

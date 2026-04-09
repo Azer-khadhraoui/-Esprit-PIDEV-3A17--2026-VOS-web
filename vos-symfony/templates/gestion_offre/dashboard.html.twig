@@ -96,7 +96,7 @@
                     <h1 class="page-title">Dashboard Offres</h1>
                     <p class="subtitle">Bienvenue {{ currentUserName }}</p>
                 </div>
-                <form method="post" action="{{ path('app_logout') }}">
+                <form method="post" action="{{ path('app_logout') }}" novalidate>
                     <button class="logout-btn" type="submit">Déconnexion</button>
                 </form>
             </div>
@@ -246,7 +246,7 @@
                                     <td style="padding:18px 24px;">{{ offer.datePublication ? offer.datePublication|date('d/m/Y') : 'N/A' }}</td>
                                     <td style="padding:18px 24px;white-space:nowrap;" onclick="event.stopPropagation();">
                                         <a href="{{ path('gestion_offre_edit', {idOffre: offer.idOffre}) }}" style="display:inline-flex;padding:10px 16px;border-radius:14px;background:#2156d8;color:#fff;font-weight:600;margin-right:10px;">Modifier</a>
-                                        <form method="post" action="{{ path('gestion_offre_delete', {idOffre: offer.idOffre}) }}" style="display:inline;" onsubmit="event.stopPropagation(); return confirm('Supprimer cette offre ?');">
+                                        <form method="post" action="{{ path('gestion_offre_delete', {idOffre: offer.idOffre}) }}" style="display:inline;" onsubmit="event.stopPropagation(); return confirm('Supprimer cette offre ?');" novalidate>
                                             <input type="hidden" name="_token" value="{{ csrf_token('delete_offer_' ~ offer.idOffre) }}">
                                             <button type="submit" style="display:inline-flex;padding:10px 16px;border-radius:14px;background:#fee2e2;color:#b91c1c;font-weight:600;border:0;cursor:pointer;">Supprimer</button>
                                         </form>

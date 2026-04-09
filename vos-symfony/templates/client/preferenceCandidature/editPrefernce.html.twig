@@ -268,7 +268,7 @@
             <h2>Mettez à jour vos critères</h2>
             <p>Modifiez vos préférences de recherche d'emploi.</p>
 
-            {{ form_start(form) }}
+            {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
 
             <div class="form-group">
                 {{ form_label(form.type_poste_souhaite, 'Type de poste souhaité') }}

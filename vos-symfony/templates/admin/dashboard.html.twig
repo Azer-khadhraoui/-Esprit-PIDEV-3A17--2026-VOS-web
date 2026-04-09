@@ -34,7 +34,7 @@
                 <h1>Dashboard Utilisateurs</h1>
                 <p>Bienvenue {{ adminName }}</p>
             </div>
-            <form method="post" action="{{ path('app_logout') }}">
+            <form method="post" action="{{ path('app_logout') }}" novalidate>
                 <button class="btn-logout" type="submit">Déconnexion</button>
             </form>
         </header>
@@ -134,7 +134,7 @@
                                     {% if user.id == adminUserId %}
                                         <span class="self-protected-chip">Compte courant</span>
                                     {% else %}
-                                        <form method="post" action="{{ path('app_admin_user_delete', {id: user.id}) }}" onsubmit="return confirm('Supprimer cet utilisateur ?');">
+                                        <form method="post" action="{{ path('app_admin_user_delete', {id: user.id}) }}" onsubmit="return confirm('Supprimer cet utilisateur ?');" novalidate>
                                             <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ user.id) }}">
                                             <button class="btn-delete" type="submit">Supprimer</button>
                                         </form>

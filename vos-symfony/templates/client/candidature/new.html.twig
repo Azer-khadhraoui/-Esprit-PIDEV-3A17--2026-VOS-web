@@ -260,7 +260,7 @@
         <h2>Formulaire de Candidature</h2>
         <p>Offre #{{ id_offre }} — Remplissez tous les champs obligatoires</p>
 
-        {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+        {{ form_start(form, {'attr': {'enctype': 'multipart/form-data', 'novalidate': 'novalidate'}}) }}
 
             {{ form_errors(form) }}
 
