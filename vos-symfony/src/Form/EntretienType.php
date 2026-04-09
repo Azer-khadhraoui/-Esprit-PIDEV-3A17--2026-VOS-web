@@ -5,7 +5,8 @@ namespace App\Form;
 use App\Entity\Candidature;
 use App\Entity\Entretien;
 use App\Entity\User;
-use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use App\Repository\CandidatureRepository;
+use App\Repository\UserRepository;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
@@ -18,8 +19,35 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class EntretienType extends AbstractType
 {
+    public function __construct(
+        private CandidatureRepository $candidatureRepository,
+        private UserRepository $userRepository,
+    ) {
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $candidatureChoices = [];
+        foreach ($this->candidatureRepository->createQueryBuilder('c')->orderBy('c.id_candidature', 'DESC')->getQuery()->getResult() as $candidature) {
+            if (!$candidature instanceof Candidature) {
+                continue;
+            }
+
+            $label = sprintf('#%d - %s', $candidature->getIdCandidature(), $candidature->getStatut() ?? 'Sans statut');
+            $candidatureChoices[$label] = $candidature->getIdCandidature();
+        }
+
+        $utilisateurChoices = [];
+        foreach ($this->userRepository->createQueryBuilder('u')->orderBy('u.prenom', 'ASC')->getQuery()->getResult() as $user) {
+            if (!$user instanceof User) {
+                continue;
+            }
+
+            $label = trim(($user->getPrenom() ?? '') . ' ' . ($user->getNom() ?? ''));
+            $label = trim($label) !== '' ? $label : 'Utilisateur';
+            $utilisateurChoices[sprintf('%s (%s)', $label, $user->getEmail() ?? 'email inconnu')] = $user->getId();
+        }
+
         $builder
             ->add('dateEntretien', DateType::class, [
                 'widget' => 'single_text',
@@ -61,31 +89,17 @@ class EntretienType extends AbstractType
                 'label' => 'Lien de réunion',
                 'default_protocol' => 'https',
             ])
-            ->add('idCandidature', EntityType::class, [
-                'class' => Candidature::class,
-                'choice_label' => 'idCandidature',
-                'choice_value' => 'idCandidature',
+            ->add('idCandidature', ChoiceType::class, [
+                'choices' => $candidatureChoices,
                 'required' => false,
                 'placeholder' => '-- Choisir une candidature --',
                 'label' => 'Candidature',
-                'query_builder' => function ($repository) {
-                    return $repository->createQueryBuilder('c')
-                        ->orderBy('c.id_candidature', 'DESC');
-                },
             ])
-            ->add('idUtilisateur', EntityType::class, [
-                'class' => User::class,
-                'choice_label' => function(User $user) {
-                    return $user->getPrenom() . ' ' . $user->getNom() . ' (' . $user->getEmail() . ')';
-                },
-                'choice_value' => 'id',
+            ->add('idUtilisateur', ChoiceType::class, [
+                'choices' => $utilisateurChoices,
                 'required' => false,
                 'placeholder' => '-- Choisir un utilisateur --',
                 'label' => 'Utilisateur',
-                'query_builder' => function ($repository) {
-                    return $repository->createQueryBuilder('u')
-                        ->orderBy('u.prenom', 'ASC');
-                },
             ])
             ->add('questionsEntretien', TextareaType::class, [
                 'required' => false,
