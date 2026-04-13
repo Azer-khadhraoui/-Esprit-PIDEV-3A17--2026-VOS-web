@@ -42,7 +42,12 @@ class EntretienType extends AbstractType
         }
 
         $utilisateurChoices = [];
-        foreach ($this->userRepository->createQueryBuilder('u')->orderBy('u.prenom', 'ASC')->getQuery()->getResult() as $user) {
+        foreach ($this->userRepository->createQueryBuilder('u')
+            ->andWhere('u.role IN (:roles)')
+            ->setParameter('roles', ['ADMIN_RH', 'ADMIN_TECHNIQUE'])
+            ->orderBy('u.prenom', 'ASC')
+            ->getQuery()
+            ->getResult() as $user) {
             if (!$user instanceof User) {
                 continue;
             }

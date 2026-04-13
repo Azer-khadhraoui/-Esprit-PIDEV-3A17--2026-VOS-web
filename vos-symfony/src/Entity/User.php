@@ -21,20 +21,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $imageProfil = null;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
-    #[Assert\NotBlank]
+    #[Assert\NotBlank(message: 'Le nom est obligatoire.')]
     private ?string $nom = null;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
-    #[Assert\NotBlank]
+    #[Assert\NotBlank(message: 'Le prénom est obligatoire.')]
     private ?string $prenom = null;
 
     #[ORM\Column(type: 'string', length: 100)]
-    #[Assert\NotBlank]
-    #[Assert\Email]
+    #[Assert\NotBlank(message: "L'adresse e-mail est obligatoire.")]
+    #[Assert\Email(message: 'Adresse e-mail invalide.')]
     private ?string $email = null;
 
     #[ORM\Column(type: 'string', length: 255)]
-    #[Assert\NotBlank]
+    #[Assert\NotBlank(message: 'Le mot de passe est obligatoire.')]
     private ?string $motDePasse = null;
 
     #[ORM\Column(type: 'string', length: 50, columnDefinition: "ENUM('CLIENT','ADMIN_RH','ADMIN_TECHNIQUE') NOT NULL DEFAULT 'CLIENT'")]
@@ -43,9 +43,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'signature_url', type: 'string', length: 500, nullable: true)]
     private ?string $signatureUrl = null;
 
-    public function __construct()
-    {
-    }
+    private ?string $plainPassword = null;
 
     public function getId(): ?int
     {
@@ -87,7 +85,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getImageProfilUrl(): ?string
     {
-        return $this->imageProfil;
+        return $this->imageProfil !== null ? '/uploads/profiles/' . $this->imageProfil : null;
     }
 
     public function getEmail(): ?string
@@ -136,7 +134,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getPassword(): ?string
     {
-        return $this->motDePasse;
+        return $this->motDePasse !== null ? (string) $this->motDePasse : null;
     }
 
     public function getRoles(): array
@@ -146,6 +144,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function eraseCredentials(): void
     {
+        $this->plainPassword = null;
     }
 
     public function getUserIdentifier(): string

@@ -1,6 +1,6 @@
 {% extends 'gestion_offre_base.html.twig' %}
 
-{% block title %}Dashboard Admin | VOS{% endblock %}
+{% block title %}Tableau de bord administrateur | VOS{% endblock %}
 
 {% block styles %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,13 +11,13 @@
 
 {% block body %}
 <div class="admin-shell">
-    <aside class="sidebar">
+    <aside class="sidebar" aria-label="Navigation principale de l'administration">
         <div class="brand">
             <span class="brand-dot"></span>
             <span>VOS Admin</span>
         </div>
-        <nav class="nav-list">
-            <a class="nav-item is-active" href="{{ path('app_admin_dashboard') }}">Gestion Users</a>
+        <nav class="nav-list" aria-label="Sections de l'administration">
+            <a class="nav-item is-active" href="{{ path('app_admin_dashboard') }}">Gestion des utilisateurs</a>
             <a class="nav-item" href="{{ path('gestion_offre_dashboard') }}">Gestion Offres</a>
             <a class="nav-item" href="{{ path('app_admin_candidatures') }}">Gestion Candidatures</a>
             <a class="nav-item" href="{{ path('gestion_entretien_dashboard') }}">Gestion Entretiens</a>
@@ -31,7 +31,7 @@
     <main class="content">
         <header class="topbar">
             <div>
-                <h1>Dashboard Utilisateurs</h1>
+                <h1>Tableau de bord des utilisateurs</h1>
                 <p>Bienvenue {{ adminName }}</p>
             </div>
             <form method="post" action="{{ path('app_logout') }}" novalidate>
@@ -39,9 +39,9 @@
             </form>
         </header>
 
-        <nav class="module-nav" aria-label="Navigation users">
-            <a class="module-link is-active" href="{{ path('app_admin_dashboard') }}">Users</a>
-            <a class="module-link" href="{{ path('app_admin_users_statistique') }}">Statistique</a>
+        <nav class="module-nav" aria-label="Navigation utilisateurs">
+            <a class="module-link is-active" href="{{ path('app_admin_dashboard') }}">Utilisateurs</a>
+            <a class="module-link" href="{{ path('app_admin_users_statistique') }}">Statistiques</a>
         </nav>
 
         {% for message in app.flashes('error') %}
@@ -53,7 +53,7 @@
 
         <section class="stats-grid">
             <article class="stat-card stat-total">
-                <h3>Total utilisateurs</h3>
+                <h3>Total des utilisateurs</h3>
                 <p>{{ stats.total }}</p>
             </article>
             <article class="stat-card stat-admins">
@@ -110,7 +110,7 @@
                             <th>Prénom</th>
                             <th>Email</th>
                             <th>Rôle</th>
-                            <th>Action</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -119,7 +119,7 @@
                             <td>{{ user.id }}</td>
                             <td>
                                 {% if user.imageProfil %}
-                                    <img class="avatar" src="{{ user.imageProfil }}" alt="photo user">
+                                    <img class="avatar" src="{{ user.imageProfil }}" alt="Utilisateur">
                                 {% else %}
                                     <div class="avatar avatar-empty">-</div>
                                 {% endif %}
@@ -143,7 +143,7 @@
                             </td>
                         </tr>
                     {% else %}
-                        <tr><td colspan="7">Aucun utilisateur trouvé.</td></tr>
+                        <tr><td colspan="7">Aucun utilisateur n'a été trouvé.</td></tr>
                     {% endfor %}
                     </tbody>
                 </table>

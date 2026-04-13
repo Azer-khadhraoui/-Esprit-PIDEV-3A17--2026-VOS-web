@@ -1,6 +1,6 @@
 {% extends 'gestion_offre_base.html.twig' %}
 
-{% block title %}Modifier User | VOS{% endblock %}
+{% block title %}Modifier un utilisateur | VOS{% endblock %}
 
 {% block styles %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,13 +45,13 @@
 
 {% block body %}
 <div class="admin-shell">
-   <aside class="sidebar">
+    <aside class="sidebar" aria-label="Navigation principale de l'administration">
         <div class="brand">
             <span class="brand-dot"></span>
             <span>VOS Admin</span>
         </div>
-        <nav class="nav-list">
-            <a class="nav-item is-active" href="{{ path('app_admin_dashboard') }}">Gestion Users</a>
+        <nav class="nav-list" aria-label="Sections de l'administration">
+            <a class="nav-item is-active" href="{{ path('app_admin_dashboard') }}">Gestion des utilisateurs</a>
             <a class="nav-item" href="{{ path('gestion_offre_dashboard') }}">Gestion Offres</a>
             <a class="nav-item" href="{{ path('app_admin_candidatures') }}">Gestion Candidatures</a>
             <a class="nav-item" href="{{ path('gestion_entretien_dashboard') }}">Gestion Entretiens</a>
@@ -65,22 +65,22 @@
     <main class="content">
         <header class="topbar">
             <div>
-                <h1>Modifier Utilisateur</h1>
+                <h1>Modifier un utilisateur</h1>
                 <p>{{ adminName }}</p>
             </div>
-            <a class="btn-edit" href="{{ path('app_admin_dashboard') }}">Retour Dashboard</a>
+            <a class="btn-edit" href="{{ path('app_admin_dashboard') }}">Retour au tableau de bord</a>
         </header>
 
         <nav class="module-nav" aria-label="Navigation users">
-            <a class="module-link" href="{{ path('app_admin_dashboard') }}">Users</a>
-            <a class="module-link" href="{{ path('app_admin_users_statistique') }}">Statistique</a>
+            <a class="module-link" href="{{ path('app_admin_dashboard') }}">Utilisateurs</a>
+            <a class="module-link" href="{{ path('app_admin_users_statistique') }}">Statistiques</a>
         </nav>
 
         <section class="table-card edit-page-card">
             <h2>{{ user.prenom }} {{ user.nom }}</h2>
             {{ form_start(editForm, {'attr': {'class': 'admin-edit-form', 'novalidate': 'novalidate'}}) }}
                 <div class="edit-layout">
-                    <aside class="edit-profile-panel">
+                    <aside class="edit-profile-panel" aria-label="Photo de profil">
                         <h3>Photo de profil</h3>
                         <div class="profile-upload">
                             <div class="profile-preview profile-preview-large">
@@ -88,7 +88,7 @@
                                     data-profile-preview
                                     class="profile-preview-image"
                                     src="{% if user.imageProfil %}{{ asset(user.imageProfil) }}{% endif %}"
-                                    alt="Aperçu de la photo de profil"
+                                    alt="Aperçu de profil"
                                     {% if not user.imageProfil %}hidden{% endif %}
                                 >
                                 <div class="profile-placeholder profile-placeholder-large" data-profile-placeholder {% if user.imageProfil %}hidden{% endif %}>

@@ -1,6 +1,6 @@
 {% extends 'gestion_offre_base.html.twig' %}
 
-{% block title %}Statistiques Utilisateurs | VOS{% endblock %}
+{% block title %}Statistiques des utilisateurs | VOS{% endblock %}
 
 {% block styles %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,13 +11,13 @@
 
 {% block body %}
 <div class="admin-shell">
-    <aside class="sidebar">
+    <aside class="sidebar" aria-label="Navigation principale de l'administration">
         <div class="brand">
             <span class="brand-dot"></span>
             <span>VOS Admin</span>
         </div>
-        <nav class="nav-list">
-            <a class="nav-item is-active" href="{{ path('app_admin_dashboard') }}">Gestion Users</a>
+        <nav class="nav-list" aria-label="Sections de l'administration">
+            <a class="nav-item is-active" href="{{ path('app_admin_dashboard') }}">Gestion des utilisateurs</a>
             <a class="nav-item" href="{{ path('gestion_offre_dashboard') }}">Gestion Offres</a>
             <a class="nav-item" href="{{ path('app_admin_candidatures') }}">Gestion Candidatures</a>
             <a class="nav-item" href="{{ path('gestion_entretien_dashboard') }}">Gestion Entretiens</a>
@@ -31,7 +31,7 @@
     <main class="content">
         <header class="topbar">
             <div>
-                <h1>Statistique Utilisateurs</h1>
+                <h1>Statistiques des utilisateurs</h1>
                 <p>Bienvenue {{ adminName }}</p>
             </div>
             <form method="post" action="{{ path('app_logout') }}" novalidate>
@@ -46,7 +46,7 @@
 
         <section class="stats-grid">
             <article class="stat-card stat-total">
-                <h3>Total utilisateurs</h3>
+                <h3>Total des utilisateurs</h3>
                 <p>{{ stats.total }}</p>
             </article>
             <article class="stat-card stat-admins">

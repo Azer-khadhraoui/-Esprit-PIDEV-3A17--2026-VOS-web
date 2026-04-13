@@ -34,17 +34,17 @@ class AdminUserType extends AbstractType
                 'required' => false,
                 'empty_data' => '',
                 'constraints' => [
-                    new NotBlank(['message' => 'Le prenom est obligatoire.']),
+                    new NotBlank(['message' => 'Le prénom est obligatoire.']),
                     new Length(['min' => 2, 'max' => 50]),
                 ],
             ])
             ->add('email', EmailType::class, [
-                'label' => 'Email',
+                'label' => 'Adresse e-mail',
                 'required' => false,
                 'empty_data' => '',
                 'constraints' => [
-                    new NotBlank(['message' => 'L email est obligatoire.']),
-                    new Email(['message' => 'Email invalide.']),
+                    new NotBlank(['message' => "L'adresse e-mail est obligatoire."]),
+                    new Email(['message' => 'Adresse e-mail invalide.']),
                 ],
             ])
             ->add('imageFile', FileType::class, [
@@ -62,7 +62,7 @@ class AdminUserType extends AbstractType
                 'required' => false,
                 'empty_data' => '',
                 'constraints' => [
-                    new NotBlank(['message' => 'Le role est obligatoire.']),
+                    new NotBlank(['message' => 'Le rôle est obligatoire.']),
                     new Choice(['choices' => ['CLIENT', 'ADMIN_RH', 'ADMIN_TECHNIQUE']]),
                 ],
             ]);

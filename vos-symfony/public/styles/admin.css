@@ -170,8 +170,8 @@ body {
     margin-top: auto;
     padding: 0.75rem;
     border-radius: 12px;
-    background: rgba(255, 255, 255, 0.08);
-    color: #d8e7ff;
+    background: #13284f;
+    color: #f3f8ff;
     font-size: 0.82rem;
     text-align: center;
     white-space: nowrap;
@@ -311,7 +311,7 @@ tbody tr:hover {
     display: grid;
     place-items: center;
     background: #eff4fd;
-    color: #8ea0be;
+    color: #5b6f8f;
 }
 
 .role-chip {
@@ -500,6 +500,25 @@ tbody tr:hover {
     box-shadow: 0 0 0 4px rgba(70, 129, 215, 0.16);
 }
 
+.admin-edit-form .form-error,
+.admin-edit-form .form-errors,
+.admin-edit-form .form-errors li,
+.admin-edit-form .invalid-feedback,
+.admin-edit-form .edit-form-panel ul,
+.admin-edit-form .edit-form-panel ul li,
+.admin-edit-form .edit-form-panel ul li::marker,
+.admin-edit-form .edit-profile-panel ul,
+.admin-edit-form .edit-profile-panel ul li,
+.admin-edit-form .edit-profile-panel ul li::marker {
+    color: #ef4444 !important;
+}
+
+.admin-edit-form .edit-form-panel ul,
+.admin-edit-form .edit-profile-panel ul {
+    margin: 0.35rem 0 0.75rem 1.25rem;
+    padding-left: 1.1rem;
+}
+
 .search-filters {
     background: #f8fbff;
     border: 1px solid var(--line);
@@ -572,6 +591,10 @@ tbody tr:hover {
 .btn-reset {
     background: #e8e8e8;
     color: var(--text);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-reset:hover {
@@ -606,20 +629,12 @@ tbody tr:hover {
     gap: 8px;
 }
 
-.btn-reset {
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
 @media (max-width: 1080px) {
     .admin-shell::after {
         height: 170px;
         opacity: 0.34;
     }
 
-    .admin-shell { grid-template-columns: 1fr; }
     .admin-shell { display: block; }
     .sidebar {
         width: 100%;
