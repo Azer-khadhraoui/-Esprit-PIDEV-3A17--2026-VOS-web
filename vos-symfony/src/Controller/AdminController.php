@@ -126,7 +126,7 @@ class AdminController extends AbstractController
         ]);
     }
 
-    #[Route('/candidatures', name: 'app_admin_candidatures', methods: ['GET'])]
+     #[Route('/candidatures', name: 'app_admin_candidatures', methods: ['GET'])]
     public function candidatures(EntityManagerInterface $entityManager, SessionInterface $session, Request $request): Response
     {
         $access = $this->requireAdmin($session);
@@ -217,7 +217,7 @@ class AdminController extends AbstractController
             'adminName' => (string) $session->get('admin_user_name', 'Admin'),
             'search' => $search,
             'statusFilter' => $statusFilter,
-            'statusOptions' => ['En attente', 'En examens', 'Acceptlee', 'Rejetee'],
+            'statusOptions' => ['En attente', 'En examens', 'Accepté', 'Refusé'],
             'sortBy' => $sortBy,
             'sortOrder' => $sortOrder,
             'users' => $users,
@@ -241,7 +241,7 @@ class AdminController extends AbstractController
                 $fieldErrors['statut'] = 'Token CSRF invalide.';
             }
 
-            $allowedStatus = ['En attente', 'En examens', 'Acceptlee', 'Rejetee'];
+            $allowedStatus = ['En attente', 'En examens', 'Accepté', 'Refusé'];
             $statut = trim((string) $request->request->get('statut', ''));
             if ($statut === '' || !in_array($statut, $allowedStatus, true)) {
                 $fieldErrors['statut'] = 'Statut invalide.';
@@ -328,8 +328,33 @@ class AdminController extends AbstractController
         $sortBy = array_key_exists($sortBy, $allowedSortFields) ? $sortBy : 'id_preference';
         $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
 
-        $qb = $entityManager->getRepository(PreferenceCandidature::class)->createQueryBuilder('p');
-        
+        $qb = $entityManager->getRepository(PreferenceCandidature::class)
+            ->createQueryBuilder('p')
+            ->leftJoin(User::class, 'u', 'WITH', 'u.id = p.id_utilisateur');
+
+        // Ajouter la logique de recherche
+        if ('' !== $search) {
+            $searchExpr = $qb->expr()->orX(
+                $qb->expr()->like('p.type_poste_souhaite', ':search'),
+                $qb->expr()->like('p.mode_travail', ':search'),
+                $qb->expr()->like('p.disponibilite', ':search'),
+                $qb->expr()->like('u.email', ':search')
+            );
+
+            if (ctype_digit($search)) {
+                $searchExpr = $qb->expr()->orX(
+                    $searchExpr,
+                    $qb->expr()->eq('p.id_preference', ':search_int'),
+                    $qb->expr()->eq('p.id_utilisateur', ':search_int')
+                );
+                $qb->setParameter(':search_int', (int) $search);
+            }
+
+            $qb
+                ->andWhere($searchExpr)
+                ->setParameter(':search', '%' . $search . '%');
+        }
+
         $qb->orderBy($allowedSortFields[$sortBy], $sortOrder);
         $preferences = $qb->getQuery()->getResult();
 

@@ -15,8 +15,8 @@
             --text: #1b2440;
             --muted: #6c7693;
             --primary: #4361ee;
-            --success: #16a34a;
-            --danger: #dc2626;
+            --open: #16a34a;
+            --closed: #dc2626;
         }
 
         * { box-sizing: border-box; }
@@ -46,6 +46,16 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        @keyframes brandFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+
+        @keyframes brandShine {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
         .header {
             background: #fff;
             border-bottom: 1px solid var(--line);
@@ -69,6 +79,12 @@
             font-size: 2rem;
             font-weight: 800;
             letter-spacing: -0.04em;
+            background: linear-gradient(90deg, #0f2b64, #1d4ed8, #0f2b64);
+            background-size: 220% 220%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: brandFloat 2.3s ease-in-out infinite, brandShine 3.8s linear infinite;
         }
 
         .nav {
@@ -87,7 +103,7 @@
             gap: 10px;
         }
 
-        .profile-btn {
+        .signup {
             border: 0;
             border-radius: 999px;
             padding: 10px 16px;
@@ -100,7 +116,7 @@
             box-shadow: 0 8px 18px rgba(67, 97, 238, 0.24);
         }
 
-        .profile-btn:hover {
+        .signup:hover {
             transform: translateY(-1px);
             filter: brightness(1.03);
         }
@@ -134,6 +150,7 @@
             font-size: 2.1rem;
             letter-spacing: -0.02em;
         }
+
 
         .flash {
             padding: 12px 14px;
