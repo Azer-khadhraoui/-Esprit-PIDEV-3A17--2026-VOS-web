@@ -11,6 +11,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\Choice;
+use Symfony\Component\Validator\Constraints\GreaterThanOrEqual;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\PositiveOrZero;
@@ -146,11 +147,17 @@ class PreferenceCandidatureType extends AbstractType
                 'html5' => true,
                 'input' => 'datetime',
                 'format' => 'yyyy-MM-dd',
+                'constraints' => [
+                    new GreaterThanOrEqual([
+                        'value' => 'today',
+                        'message' => 'La date de disponibilité doit être aujourd\'hui ou dans le futur.'
+                    ]),
+                ],
                 'attr' => [
                     'type' => 'date',
                     'class' => 'form-control'
                 ],
-                'help' => 'La date doit être dans le futur'
+                'help' => 'La date doit être aujourd\'hui ou dans le futur'
             ])
         ;
         // Remarque: id_utilisateur n'est pas inclus car il est défini automatiquement par le controller

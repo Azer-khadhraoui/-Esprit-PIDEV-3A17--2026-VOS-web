@@ -382,7 +382,7 @@
 
             <div class="form-group">
                 {{ form_label(form.date_disponibilite, 'Date de disponibilité') }}
-                {{ form_widget(form.date_disponibilite) }}
+                {{ form_widget(form.date_disponibilite, { 'attr': { 'min': "now"|date('Y-m-d') } }) }}
                 {% if form.date_disponibilite.vars.errors|length > 0 %}
                     <ul class="form-errors">
                         {% for error in form.date_disponibilite.vars.errors %}

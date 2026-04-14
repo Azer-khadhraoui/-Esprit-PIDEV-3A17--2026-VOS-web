@@ -107,7 +107,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="date_disponibilite">Date de Disponibilité</label>
-                            <input type="date" id="date_disponibilite" name="date_disponibilite" value="{{ formValues.date_disponibilite|default(preference.dateDisponibilite ? preference.dateDisponibilite|date('Y-m-d') : '') }}" class="form-input">
+                            <input type="date" id="date_disponibilite" name="date_disponibilite" min="{{ "now"|date('Y-m-d') }}" value="{{ formValues.date_disponibilite|default(preference.dateDisponibilite ? preference.dateDisponibilite|date('Y-m-d') : '') }}" class="form-input">
                             {% if fieldErrors.date_disponibilite is defined %}
                                 <small style="color:#b91c1c;font-size:0.82rem;margin-top:4px;">{{ fieldErrors.date_disponibilite }}</small>
                             {% endif %}
