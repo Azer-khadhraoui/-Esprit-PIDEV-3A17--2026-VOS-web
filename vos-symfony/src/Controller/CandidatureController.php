@@ -4,8 +4,10 @@ namespace App\Controller;
 
 use App\Entity\Candidature;
 use App\Entity\OffreEmploi;
+use App\Entity\User;
 use App\Form\CandidatureType;
 use App\Repository\CandidatureRepository;
+use App\Service\EmailService;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -54,7 +56,8 @@ final class CandidatureController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         SluggerInterface $slugger,
-        SessionInterface $session
+        SessionInterface $session,
+        EmailService $emailService
     ): Response {
         $idUtilisateur = (int) $session->get('user_id', 0);
 
@@ -97,6 +100,20 @@ final class CandidatureController extends AbstractController
                 $entityManager->persist($candidature);
                 $entityManager->flush();
 
+                // Récupérer l'utilisateur et envoyer les emails
+                try {
+                    $user = $entityManager->getRepository(User::class)->find($idUtilisateur);
+                    if ($user) {
+                        // Email au candidat
+                        $emailService->sendCandidatureCreatedEmail($candidature, $user, $offre->getTitre());
+                        // Notification aux admins
+                        $emailService->notifyAdminsNewCandidature($candidature, $user, $offre->getTitre());
+                    }
+                } catch (\Exception $e) {
+                    // Logger l'erreur mais ne pas bloquer le processus
+                    $this->addFlash('warning', 'Candidature soumise, mais l\'email de confirmation n\'a pas pu être envoyé.');
+                }
+
                 $this->addFlash('success', 'Votre candidature a été soumise avec succès !');
                 return $this->redirectToRoute('app_client_candidatures');
             }
@@ -117,7 +134,8 @@ final class CandidatureController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         SluggerInterface $slugger,
-        SessionInterface $session
+        SessionInterface $session,
+        EmailService $emailService
     ): Response {
         $idUtilisateur = (int) $session->get('user_id', 0);
         if ($idUtilisateur <= 0 || $candidature->getIdUtilisateur() !== $idUtilisateur) {
@@ -146,6 +164,21 @@ final class CandidatureController extends AbstractController
                 }
 
                 $entityManager->flush();
+
+                // Envoyer les emails de notification
+                try {
+                    $user = $entityManager->getRepository(User::class)->find($idUtilisateur);
+                    if ($user && $offre) {
+                        // Email au candidat
+                        $emailService->sendCandidatureUpdatedEmail($candidature, $user, $offre->getTitre());
+                        // Notification aux admins
+                        $emailService->notifyAdminsUpdatedCandidature($candidature, $user, $offre->getTitre());
+                    }
+                } catch (\Exception $e) {
+                    // Logger l'erreur mais ne pas bloquer le processus
+                    $this->addFlash('warning', 'Candidature mise à jour, mais l\'email de confirmation n\'a pas pu être envoyé.');
+                }
+
                 $this->addFlash('success', 'Candidature mise à jour avec succès !');
                 return $this->redirectToRoute('app_client_candidatures');
             }
@@ -186,7 +219,8 @@ final class CandidatureController extends AbstractController
         Candidature $candidature,
         Request $request,
         EntityManagerInterface $em,
-        SessionInterface $session
+        SessionInterface $session,
+        EmailService $emailService
     ): Response {
         $idUtilisateur = (int) $session->get('user_id', 0);
         if ($idUtilisateur <= 0 || $candidature->getIdUtilisateur() !== $idUtilisateur) {
@@ -194,8 +228,31 @@ final class CandidatureController extends AbstractController
         }
 
         if ($this->isCsrfTokenValid('delete'.$candidature->getIdCandidature(), $request->request->get('_token'))) {
+            // Récupérer les informations avant suppression
+            $user = $em->getRepository(User::class)->find($idUtilisateur);
+            $offre = $em->getRepository(OffreEmploi::class)->find($candidature->getIdOffre());
+            
+            // Récupérer infos pour l'email avant la suppression
+            $userEmail = $user?->getEmail() ?? '';
+            $userName = $user ? ($user->getPrenom() . ' ' . $user->getNom()) : 'Utilisateur';
+            $offreTitre = $offre?->getTitre() ?? 'Offre';
+
             $em->remove($candidature);
             $em->flush();
+
+            // Envoyer les emails de notification
+            try {
+                if ($user && $userEmail) {
+                    // Email au candidat
+                    $emailService->sendCandidatureDeletedEmail($userEmail, $userName, $offreTitre);
+                    // Notification aux admins
+                    $emailService->notifyAdminsDeletedCandidature($userName, $userEmail, $offreTitre);
+                }
+            } catch (\Exception $e) {
+                // Logger l'erreur mais ne pas bloquer le processus
+                $this->addFlash('warning', 'Candidature supprimée, mais l\'email de confirmation n\'a pas pu être envoyé.');
+            }
+
             $this->addFlash('success', 'Candidature supprimée.');
         }
 
