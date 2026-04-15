@@ -3,9 +3,11 @@
 namespace App\Controller;
 
 use App\Entity\OffreEmploi;
+use App\Service\OffreTranslationAiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -13,6 +15,11 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class ClientOffreController extends AbstractController
 {
+    public function __construct(
+        private readonly OffreTranslationAiService $offreTranslationAiService,
+    ) {
+    }
+
     #[Route('/opportunites', name: 'client_opportunites', methods: ['GET'])]
     public function index(Request $request, EntityManagerInterface $entityManager, SessionInterface $session): Response
     {
@@ -230,6 +237,60 @@ class ClientOffreController extends AbstractController
         return $this->redirectToRoute('client_opportunites');
     }
 
+    #[Route('/opportunites/translate-criteria', name: 'client_opportunites_translate_criteria', methods: ['GET'])]
+    public function translateCriteria(Request $request, EntityManagerInterface $entityManager, SessionInterface $session): JsonResponse
+    {
+        $authScope = (string) $session->get('auth_scope', '');
+        $hasClientSession = (bool) $session->get('user_id') && (string) $session->get('user_role', '') === 'CLIENT';
+        $hasAdminSession = (bool) $session->get('admin_user_id') && str_starts_with((string) $session->get('admin_user_role', ''), 'ADMIN');
+
+        $isAuthenticated = $authScope === '' ? ($hasClientSession || $hasAdminSession) : (
+            ($authScope === 'client' && $hasClientSession)
+            || ($authScope === 'admin' && $hasAdminSession)
+        );
+
+        if (!$isAuthenticated) {
+            return $this->json([
+                'message' => 'Unauthorized',
+            ], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        $offerId = (int) $request->query->get('id_offre', 0);
+        $targetLanguage = strtoupper((string) $request->query->get('lang', 'FR'));
+        if ($offerId <= 0) {
+            return $this->json([
+                'message' => 'id_offre is required.',
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        if (!in_array($targetLanguage, ['FR', 'EN'], true)) {
+            return $this->json([
+                'message' => 'lang must be FR or EN.',
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $criteria = $this->getLatestCriteriaForOfferId($entityManager, $offerId);
+        if ($criteria === null) {
+            return $this->json([
+                'message' => 'Critere not found for this offer.',
+            ], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $niveauExperience = $this->offreTranslationAiService->translate((string) ($criteria['niveau_experience'] ?? ''), $targetLanguage);
+        $niveauEtude = $this->offreTranslationAiService->translate((string) ($criteria['niveau_etude'] ?? ''), $targetLanguage);
+        $competencesRequises = $this->offreTranslationAiService->translate((string) ($criteria['competences_requises'] ?? ''), $targetLanguage);
+        $responsibilities = $this->offreTranslationAiService->translate((string) ($criteria['responsibilities'] ?? ''), $targetLanguage);
+
+        return $this->json([
+            'id_offre' => $offerId,
+            'lang' => $targetLanguage,
+            'niveau_experience' => $niveauExperience,
+            'niveau_etude' => $niveauEtude,
+            'competences_requises' => $competencesRequises,
+            'responsibilities' => $responsibilities,
+        ]);
+    }
+
     private function normalizeText(mixed $value): ?string
     {
         if (!is_string($value)) {
@@ -300,5 +361,27 @@ class ClientOffreController extends AbstractController
         }
 
         return $criteriaByOffer;
+    }
+
+    /**
+     * @return array{niveau_experience: ?string, niveau_etude: ?string, competences_requises: ?string, responsibilities: ?string}|null
+     */
+    private function getLatestCriteriaForOfferId(EntityManagerInterface $entityManager, int $offerId): ?array
+    {
+        $row = $entityManager->getConnection()->executeQuery(
+            'SELECT niveau_experience, niveau_etude, competences_requises, responsibilities FROM critere_offre WHERE id_offre = :offerId ORDER BY id_critere DESC LIMIT 1',
+            ['offerId' => $offerId]
+        )->fetchAssociative();
+
+        if (!is_array($row)) {
+            return null;
+        }
+
+        return [
+            'niveau_experience' => isset($row['niveau_experience']) ? (string) $row['niveau_experience'] : null,
+            'niveau_etude' => isset($row['niveau_etude']) ? (string) $row['niveau_etude'] : null,
+            'competences_requises' => isset($row['competences_requises']) ? (string) $row['competences_requises'] : null,
+            'responsibilities' => isset($row['responsibilities']) ? (string) $row['responsibilities'] : null,
+        ];
     }
 }

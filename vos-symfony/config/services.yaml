@@ -51,3 +51,8 @@ services:
         bind:
             $groqApiKey: '%app.groq_api_key%'
             $groqModel: '%app.groq_model%'
+
+    App\Service\OffreTranslationAiService:
+        bind:
+            $groqApiKey: '%app.groq_api_key%'
+            $groqModel: '%app.groq_model%'

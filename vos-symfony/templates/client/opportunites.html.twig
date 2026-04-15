@@ -391,6 +391,30 @@
             background: #cfdaff;
         }
 
+        .lang-switch {
+            display: inline-flex;
+            border: 1px solid #d9deea;
+            border-radius: 999px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .lang-btn {
+            border: 0;
+            background: transparent;
+            color: #4b587c;
+            font-weight: 700;
+            font-size: 0.74rem;
+            padding: 5px 9px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .lang-btn.is-active {
+            background: #e0e7ff;
+            color: #1d4ed8;
+        }
+
         .modal {
             position: fixed;
             inset: 0;
@@ -603,8 +627,20 @@
                     </div>
 
                     <div class="details-section">
-                        <h4>Profil recherche</h4>
-                        <ul class="details-list">
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                            <h4>Profil recherche</h4>
+                            <div class="lang-switch" data-criteria-switch="{{ offer.idOffre }}">
+                                <button type="button" class="lang-btn criteria-lang-btn is-active" data-lang="FR" data-offer-id="{{ offer.idOffre }}">FR</button>
+                                <button type="button" class="lang-btn criteria-lang-btn" data-lang="EN" data-offer-id="{{ offer.idOffre }}">EN</button>
+                            </div>
+                        </div>
+                        <ul
+                            class="details-list criteria-profile-list"
+                            data-offer-id="{{ offer.idOffre }}"
+                            data-fr-niveau-experience="{{ (critere.niveau_experience ?? '')|e('html_attr') }}"
+                            data-fr-niveau-etude="{{ (critere.niveau_etude ?? '')|e('html_attr') }}"
+                            data-fr-competences="{{ (critere.competences_requises ?? '')|e('html_attr') }}"
+                        >
                             {% if critere and critere.niveau_experience %}<li>{{ critere.niveau_experience }}</li>{% endif %}
                             {% if critere and critere.niveau_etude %}<li>{{ critere.niveau_etude }}</li>{% endif %}
                             {% if critere and critere.competences_requises %}
@@ -618,7 +654,7 @@
 
                     <div class="details-section" style="padding-bottom:18px;">
                         <h4>Responsabilites</h4>
-                        <ul class="details-list">
+                        <ul class="details-list criteria-responsibilities-list" data-offer-id="{{ offer.idOffre }}" data-fr-responsibilities="{{ (critere.responsibilities ?? '')|e('html_attr') }}">
                             {% if critere and critere.responsibilities %}
                                 {% for item in critere.responsibilities|replace({'\r': ''})|split('\n') %}
                                     {% if item|trim != '' %}<li>{{ item|trim }}</li>{% endif %}
@@ -690,6 +726,7 @@
         const detailsModal = document.getElementById('details-modal');
         const detailsBody = document.getElementById('details-modal-body');
         const closeDetailsBtn = document.getElementById('close-details-modal');
+        const criteriaCache = {};
 
         const closeDetailsModal = () => {
             if (!detailsModal || !detailsBody) return;
@@ -715,6 +752,143 @@
             detailsModal.addEventListener('click', (event) => {
                 if (event.target === detailsModal) {
                     closeDetailsModal();
+                }
+            });
+        }
+
+        const splitLines = (text) => {
+            return (text || '')
+                .replace(/\r/g, '')
+                .split('\n')
+                .map((line) => line.trim())
+                .filter((line) => line.length > 0);
+        };
+
+        const setCriteriaLangButtonState = (offerId, activeLang) => {
+            if (!detailsBody) return;
+            detailsBody.querySelectorAll(`.criteria-lang-btn[data-offer-id="${offerId}"]`).forEach((btn) => {
+                btn.classList.toggle('is-active', btn.getAttribute('data-lang') === activeLang);
+            });
+        };
+
+        const renderList = (listEl, items, fallbackText) => {
+            if (!listEl) return;
+
+            const normalizedItems = items.filter((item) => item.trim() !== '');
+            if (normalizedItems.length === 0) {
+                listEl.innerHTML = `<li>${fallbackText}</li>`;
+                return;
+            }
+
+            listEl.innerHTML = normalizedItems.map((item) => `<li>${item}</li>`).join('');
+        };
+
+        const renderCriteria = (offerId, criteriaData) => {
+            if (!detailsBody) return;
+
+            const profileList = detailsBody.querySelector(`.criteria-profile-list[data-offer-id="${offerId}"]`);
+            const responsibilitiesList = detailsBody.querySelector(`.criteria-responsibilities-list[data-offer-id="${offerId}"]`);
+
+            if (!profileList || !responsibilitiesList) return;
+
+            const profileItems = [];
+            if ((criteriaData.niveau_experience || '').trim() !== '') {
+                profileItems.push(criteriaData.niveau_experience.trim());
+            }
+            if ((criteriaData.niveau_etude || '').trim() !== '') {
+                profileItems.push(criteriaData.niveau_etude.trim());
+            }
+
+            splitLines(criteriaData.competences_requises || '').forEach((line) => {
+                profileItems.push(line.replace(/^[-*]\s*/, '').trim());
+            });
+
+            renderList(profileList, profileItems, 'Profil non precise.');
+
+            const responsibilitiesItems = splitLines(criteriaData.responsibilities || '').map((line) => line.replace(/^[-*]\s*/, '').trim());
+            renderList(responsibilitiesList, responsibilitiesItems, 'Responsabilites non precisees.');
+        };
+
+        const getFrCriteriaFromDataset = (offerId) => {
+            if (!detailsBody) return null;
+            const profileList = detailsBody.querySelector(`.criteria-profile-list[data-offer-id="${offerId}"]`);
+            const responsibilitiesList = detailsBody.querySelector(`.criteria-responsibilities-list[data-offer-id="${offerId}"]`);
+            if (!profileList || !responsibilitiesList) {
+                return null;
+            }
+
+            return {
+                niveau_experience: profileList.dataset.frNiveauExperience || '',
+                niveau_etude: profileList.dataset.frNiveauEtude || '',
+                competences_requises: profileList.dataset.frCompetences || '',
+                responsibilities: responsibilitiesList.dataset.frResponsibilities || '',
+            };
+        };
+
+        if (detailsBody) {
+            detailsBody.addEventListener('click', async (event) => {
+                const button = event.target.closest('.criteria-lang-btn');
+                if (!button) return;
+
+                const offerId = button.getAttribute('data-offer-id');
+                const lang = (button.getAttribute('data-lang') || 'FR').toUpperCase();
+                if (!offerId) return;
+
+                const cacheKey = `${offerId}_${lang}`;
+
+                if (lang === 'FR') {
+                    const frCriteria = getFrCriteriaFromDataset(offerId);
+                    if (frCriteria) {
+                        renderCriteria(offerId, frCriteria);
+                    }
+                    setCriteriaLangButtonState(offerId, 'FR');
+                    return;
+                }
+
+                if (criteriaCache[cacheKey]) {
+                    renderCriteria(offerId, criteriaCache[cacheKey]);
+                    setCriteriaLangButtonState(offerId, lang);
+                    return;
+                }
+
+                try {
+                    button.disabled = true;
+
+                    const params = new URLSearchParams({
+                        id_offre: offerId,
+                        lang: lang,
+                    });
+
+                    const response = await fetch(`{{ path('client_opportunites_translate_criteria') }}?${params.toString()}`, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    const payload = await response.json();
+                    if (!response.ok) {
+                        throw new Error(payload.message || 'Translation failed.');
+                    }
+
+                    const translatedData = {
+                        niveau_experience: (payload.niveau_experience || '').trim(),
+                        niveau_etude: (payload.niveau_etude || '').trim(),
+                        competences_requises: (payload.competences_requises || '').trim(),
+                        responsibilities: (payload.responsibilities || '').trim(),
+                    };
+
+                    criteriaCache[cacheKey] = translatedData;
+                    renderCriteria(offerId, translatedData);
+                    setCriteriaLangButtonState(offerId, lang);
+                } catch (error) {
+                    const frCriteria = getFrCriteriaFromDataset(offerId);
+                    if (frCriteria) {
+                        renderCriteria(offerId, frCriteria);
+                    }
+                    setCriteriaLangButtonState(offerId, 'FR');
+                } finally {
+                    button.disabled = false;
                 }
             });
         }
