@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\OffreEmploi;
+use App\Entity\PreferenceCandidature;
+use App\Service\MatchingService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -228,6 +230,106 @@ class ClientOffreController extends AbstractController
         $this->addFlash('success', 'Candidature envoyee avec succes.');
 
         return $this->redirectToRoute('client_opportunites');
+    }
+
+    #[Route('/offres-compatibles', name: 'client_offres_compatibles', methods: ['GET'])]
+    public function offresCompatibles(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        SessionInterface $session,
+        MatchingService $matchingService
+    ): Response {
+        $isClientAuthenticated = (bool) $session->get('user_id')
+            && (string) $session->get('user_role', '') === 'CLIENT'
+            && (string) $session->get('auth_scope', '') === 'client';
+
+        if (!$isClientAuthenticated) {
+            return $this->redirectToRoute('app_signin');
+        }
+
+        $idUtilisateur = (int) $session->get('user_id', 0);
+        if ($idUtilisateur <= 0) {
+            return $this->redirectToRoute('app_signin');
+        }
+
+        // Récupérer les préférences du candidat
+        $preference = $entityManager->getRepository(PreferenceCandidature::class)
+            ->findOneBy(['id_utilisateur' => $idUtilisateur]);
+
+        // Récupérer tous les offres ouvertes
+        $offres = $entityManager->getRepository(OffreEmploi::class)
+            ->findBy(['statutOffre' => 'OUVERTE'], ['datePublication' => 'DESC']);
+
+        // Calculer les scores de matching
+        $offresAvecScore = [];
+        foreach ($offres as $offre) {
+            $matching = $matchingService->calculateMatching($offre, $preference);
+            $offresAvecScore[] = [
+                'offre' => $offre,
+                'matching' => $matching,
+            ];
+        }
+
+        // Trier par score décroissant
+        usort($offresAvecScore, function ($a, $b) {
+            return $b['matching']['score'] <=> $a['matching']['score'];
+        });
+
+        // Pagination
+        $page = max(1, (int) $request->query->get('page', 1));
+        $perPage = 10;
+        $total = count($offresAvecScore);
+        $totalPages = ceil($total / $perPage);
+        
+        $startIndex = ($page - 1) * $perPage;
+        $paginatedOffres = array_slice($offresAvecScore, $startIndex, $perPage);
+
+        return $this->render('client/candidature/offres_compatibles.html.twig', [
+            'offresAvecScore' => $paginatedOffres,
+            'preference' => $preference,
+            'userName' => $session->get('user_name', 'Candidat'),
+            'activePage' => 'offres-compatibles',
+            'pagination' => [
+                'page' => $page,
+                'totalPages' => $totalPages,
+                'total' => $total,
+            ],
+        ]);
+    }
+
+    #[Route('/offre/{idOffre}/matching-score', name: 'client_offre_matching_score', methods: ['GET'])]
+    public function matchingScore(
+        #[MapEntity(id: 'idOffre')] OffreEmploi $offre,
+        EntityManagerInterface $entityManager,
+        SessionInterface $session,
+        MatchingService $matchingService
+    ): Response {
+        $isClientAuthenticated = (bool) $session->get('user_id')
+            && (string) $session->get('user_role', '') === 'CLIENT'
+            && (string) $session->get('auth_scope', '') === 'client';
+
+        if (!$isClientAuthenticated) {
+            return $this->redirectToRoute('app_signin');
+        }
+
+        $idUtilisateur = (int) $session->get('user_id', 0);
+        if ($idUtilisateur <= 0) {
+            return $this->redirectToRoute('app_signin');
+        }
+
+        // Récupérer les préférences du candidat
+        $preference = $entityManager->getRepository(PreferenceCandidature::class)
+            ->findOneBy(['id_utilisateur' => $idUtilisateur]);
+
+        // Calculer le score de matching
+        $matchingResult = $matchingService->calculateMatching($offre, $preference);
+
+        return $this->render('client/candidature/matching_score.html.twig', [
+            'offre' => $offre,
+            'preference' => $preference,
+            'matching' => $matchingResult,
+            'userName' => $session->get('user_name', 'Candidat'),
+        ]);
     }
 
     private function normalizeText(mixed $value): ?string
