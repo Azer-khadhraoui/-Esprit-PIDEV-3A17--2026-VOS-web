@@ -194,6 +194,39 @@
             color: #60769b;
             font-size: 10.5px;
         }
+
+        .qr-block {
+            margin-top: 18px;
+            display: table;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .qr-box {
+            display: table-cell;
+            width: 128px;
+            vertical-align: middle;
+        }
+
+        .qr-box img {
+            width: 116px;
+            height: 116px;
+            display: block;
+        }
+
+        .qr-text {
+            display: table-cell;
+            vertical-align: middle;
+            padding-left: 16px;
+            color: #334155;
+        }
+
+        .qr-title {
+            margin: 0 0 6px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #123c8a;
+        }
     </style>
 </head>
 <body>
@@ -274,6 +307,17 @@
             <div class="signature">
                 <div>Fait le {{ submittedAt|date('d/m/Y') }}</div>
                 <div class="line">Signature du demandeur</div>
+            </div>
+
+            <div class="qr-block">
+                <div class="qr-box">
+                    <img src="{{ qr_code_data_uri(qrPayload) }}" alt="QR code de verification">
+                </div>
+                <div class="qr-text">
+                    <p class="qr-title">Verification rapide</p>
+                    <div>Scannez ce QR code pour ouvrir la page de verification d'authenticite du document.</div>
+                    <div style="margin-top:6px;font-size:11px;color:#64748b;">Reference: {{ reference }}</div>
+                </div>
             </div>
 
             <div class="footer">

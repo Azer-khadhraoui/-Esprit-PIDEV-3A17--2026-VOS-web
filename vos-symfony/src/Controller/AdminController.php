@@ -10,8 +10,6 @@ use App\Form\AdminUserType;
 use App\Service\AdminDashboardService;
 use App\Service\GroqReasonEnhancer;
 use App\Service\AdminUserService;
-use Dompdf\Dompdf;
-use Dompdf\Options;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -20,6 +18,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Nucleos\DompdfBundle\Wrapper\DompdfWrapperInterface;
 
 #[Route('/admin')]
 class AdminController extends AbstractController
@@ -131,7 +131,7 @@ class AdminController extends AbstractController
     }
 
     #[Route('/users/service-administratif', name: 'app_admin_users_administrative_service', methods: ['GET', 'POST'])]
-    public function administrativeService(Request $request, SessionInterface $session, GroqReasonEnhancer $reasonEnhancer): Response
+    public function administrativeService(Request $request, SessionInterface $session, GroqReasonEnhancer $reasonEnhancer, DompdfWrapperInterface $pdfWrapper, UrlGeneratorInterface $urlGenerator): Response
     {
         $access = $this->requireAdmin($session);
         if ($access instanceof RedirectResponse) {
@@ -254,24 +254,45 @@ class AdminController extends AbstractController
 
             if (!$isEnhanceAction && $errors === []) {
                 $reference = sprintf('ADM-%s-%s', (new \DateTimeImmutable())->format('Ymd'), strtoupper(substr(sha1($formData['email'] . microtime(true)), 0, 6)));
+                $issuedAt = (new \DateTimeImmutable())->getTimestamp();
+                $verificationPayload = [
+                    'ref' => $reference,
+                    'type' => $formData['request_type'],
+                    'name' => $formData['full_name'],
+                    'issued' => (string) $issuedAt,
+                ];
+                $verificationSignature = $this->createDocumentSignature(
+                    $verificationPayload['ref'],
+                    $verificationPayload['type'],
+                    $verificationPayload['name'],
+                    $verificationPayload['issued']
+                );
+
+                $verificationPath = $urlGenerator->generate('app_admin_document_verify', [
+                    'ref' => $verificationPayload['ref'],
+                    'type' => $verificationPayload['type'],
+                    'name' => $verificationPayload['name'],
+                    'issued' => $verificationPayload['issued'],
+                    'sig' => $verificationSignature,
+                ], UrlGeneratorInterface::ABSOLUTE_PATH);
+
+                $configuredPublicUrl = trim((string) ($_ENV['APP_PUBLIC_URL'] ?? $_SERVER['APP_PUBLIC_URL'] ?? ''));
+                $publicBaseUrl = $this->resolvePublicBaseUrl($request, $configuredPublicUrl);
+
+                $verificationUrl = $publicBaseUrl . $verificationPath;
+
                 $pdfHtml = $this->renderView('admin/administrative_service_pdf.html.twig', [
                     'formData' => $formData,
                     'submittedAt' => new \DateTimeImmutable(),
                     'reference' => $reference,
+                    'qrPayload' => $verificationUrl,
+                    'verificationUrl' => $verificationUrl,
                 ]);
-
-                $options = new Options();
-                $options->set('isRemoteEnabled', false);
-
-                $dompdf = new Dompdf($options);
-                $dompdf->setPaper('A4', 'portrait');
-                $dompdf->loadHtml($pdfHtml, 'UTF-8');
-                $dompdf->render();
 
                 $typePrefix = $formData['request_type'] === 'demission' ? 'demission' : 'conge';
                 $filename = sprintf('%s_%s.pdf', $typePrefix, (new \DateTimeImmutable())->format('Ymd_His'));
 
-                $response = new Response($dompdf->output());
+                $response = new Response($pdfWrapper->getPdf($pdfHtml));
                 $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $filename);
                 $response->headers->set('Content-Type', 'application/pdf');
                 $response->headers->set('Content-Disposition', $disposition);
@@ -286,6 +307,41 @@ class AdminController extends AbstractController
             'errors' => $errors,
             'today' => $today,
             'isGroqConfigured' => $reasonEnhancer->isConfigured(),
+        ]);
+    }
+
+    #[Route('/document/verify', name: 'app_admin_document_verify', methods: ['GET'])]
+    public function verifyDocument(Request $request): Response
+    {
+        $reference = trim((string) $request->query->get('ref', ''));
+        $type = trim((string) $request->query->get('type', ''));
+        $name = trim((string) $request->query->get('name', ''));
+        $issued = trim((string) $request->query->get('issued', ''));
+        $signature = trim((string) $request->query->get('sig', ''));
+
+        $isValid = false;
+        $message = 'Code invalide.';
+
+        if ($reference !== '' && $type !== '' && $name !== '' && ctype_digit($issued) && $signature !== '') {
+            $expectedSignature = $this->createDocumentSignature($reference, $type, $name, $issued);
+            $isValid = hash_equals($expectedSignature, $signature);
+
+            if ($isValid) {
+                $message = 'Document authentique genere par VOS Backoffice.';
+            } else {
+                $message = 'Signature invalide: document potentiellement modifie.';
+            }
+        }
+
+        $issuedAt = ctype_digit($issued) ? (new \DateTimeImmutable())->setTimestamp((int) $issued) : null;
+
+        return $this->render('admin/document_verify.html.twig', [
+            'isValid' => $isValid,
+            'message' => $message,
+            'reference' => $reference,
+            'type' => $type,
+            'name' => $name,
+            'issuedAt' => $issuedAt,
         ]);
     }
 
@@ -694,5 +750,67 @@ class AdminController extends AbstractController
         }
 
         return null;
+    }
+
+    private function createDocumentSignature(string $reference, string $type, string $name, string $issued): string
+    {
+        $secret = (string) $this->getParameter('kernel.secret');
+        $payload = implode('|', [$reference, $type, $name, $issued]);
+
+        return hash_hmac('sha256', $payload, $secret);
+    }
+
+    private function resolvePublicBaseUrl(Request $request, string $configuredPublicUrl): string
+    {
+        if ($configuredPublicUrl !== '') {
+            return rtrim($configuredPublicUrl, '/');
+        }
+
+        $requestBaseUrl = rtrim($request->getSchemeAndHttpHost(), '/');
+        if (!$this->isLocalHost($request->getHost())) {
+            return $requestBaseUrl;
+        }
+
+        $detectedLanIp = $this->detectLanIp();
+        if ($detectedLanIp === null) {
+            return $requestBaseUrl;
+        }
+
+        $scheme = $request->isSecure() ? 'https' : 'http';
+        $port = $request->getPort();
+        $defaultPort = $request->isSecure() ? 443 : 80;
+        $portSuffix = $port !== $defaultPort ? ':' . $port : '';
+
+        return sprintf('%s://%s%s', $scheme, $detectedLanIp, $portSuffix);
+    }
+
+    private function isLocalHost(string $host): bool
+    {
+        $normalizedHost = strtolower(trim($host));
+
+        return in_array($normalizedHost, ['localhost', '127.0.0.1', '::1'], true);
+    }
+
+    private function detectLanIp(): ?string
+    {
+        $hostnameIp = gethostbyname(gethostname());
+        if (!$this->isPrivateIpv4($hostnameIp)) {
+            return null;
+        }
+
+        return $hostnameIp;
+    }
+
+    private function isPrivateIpv4(string $ip): bool
+    {
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            return false;
+        }
+
+        if (str_starts_with($ip, '127.')) {
+            return false;
+        }
+
+        return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE) === false;
     }
 }
