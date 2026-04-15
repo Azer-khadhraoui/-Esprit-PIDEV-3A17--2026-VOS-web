@@ -391,7 +391,12 @@
 
     <div class="controls">
         <div></div>
-        <a class="browse-btn" href="{{ path('client_opportunites') }}">+ Voir les offres</a>
+        <div style="display: flex; gap: 10px;">
+            <a class="browse-btn" href="{{ path('app_client_candidature_export_pdf') }}" title="Télécharger en PDF">
+                📄 Exporter en PDF
+            </a>
+            <a class="browse-btn" href="{{ path('client_opportunites') }}">+ Voir les offres</a>
+        </div>
     </div>
 
     {% if candidatures is empty %}

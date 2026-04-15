@@ -9,6 +9,7 @@ use App\Entity\User;
 use App\Form\AdminUserType;
 use App\Service\AdminDashboardService;
 use App\Service\AdminUserService;
+use App\Service\PdfService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -303,6 +304,132 @@ class AdminController extends AbstractController
         }
 
         return $this->redirectToRoute('app_admin_candidatures');
+    }
+
+    // ── Export PDF - Liste des candidatures ───────────────────────────
+    #[Route('/candidatures/export-pdf', name: 'app_admin_candidatures_export_pdf', methods: ['GET'])]
+    public function exportCandidaturesPdf(
+        EntityManagerInterface $entityManager,
+        SessionInterface $session,
+        Request $request,
+        PdfService $pdfService
+    ): Response {
+        $access = $this->requireAdmin($session);
+        if ($access instanceof RedirectResponse) {
+            return $access;
+        }
+
+        $search = trim((string) $request->query->get('search', ''));
+        $statusFilter = trim((string) $request->query->get('status', ''));
+        $sortBy = (string) $request->query->get('sortBy', 'id_candidature');
+        $sortOrder = strtoupper((string) $request->query->get('sortOrder', 'DESC'));
+
+        $allowedSortBy = ['id_candidature', 'date_candidature', 'statut'];
+        if (!in_array($sortBy, $allowedSortBy, true)) {
+            $sortBy = 'id_candidature';
+        }
+
+        if (!in_array($sortOrder, ['ASC', 'DESC'], true)) {
+            $sortOrder = 'DESC';
+        }
+
+        $qb = $entityManager->getRepository(Candidature::class)
+            ->createQueryBuilder('c')
+            ->leftJoin(User::class, 'u', 'WITH', 'u.id = c.id_utilisateur')
+            ->leftJoin(OffreEmploi::class, 'o', 'WITH', 'o.idOffre = c.id_offre');
+
+        if ('' !== $search) {
+            $searchExpr = $qb->expr()->orX(
+                $qb->expr()->like('u.nom', ':search'),
+                $qb->expr()->like('u.prenom', ':search'),
+                $qb->expr()->like('o.titre', ':search')
+            );
+
+            if (ctype_digit($search)) {
+                $searchExpr = $qb->expr()->orX(
+                    $searchExpr,
+                    $qb->expr()->eq('c.id_candidature', ':id')
+                );
+                $qb->setParameter('id', $search);
+            }
+
+            $qb->andWhere($searchExpr)->setParameter('search', '%' . $search . '%');
+        }
+
+        if ('' !== $statusFilter) {
+            $qb->andWhere('c.statut = :status')->setParameter('status', $statusFilter);
+        }
+
+        $qb->orderBy('c.'.$sortBy, $sortOrder);
+        
+        $candidatures = $qb->getQuery()->getResult();
+        
+        // Charger les User et OffreEmploi séparément
+        $userIds = [];
+        $offreIds = [];
+        
+        foreach ($candidatures as $candidature) {
+            if ($candidature->getIdUtilisateur()) {
+                $userIds[$candidature->getIdUtilisateur()] = true;
+            }
+            if ($candidature->getIdOffre()) {
+                $offreIds[$candidature->getIdOffre()] = true;
+            }
+        }
+        
+        $users = [];
+        $offres = [];
+        
+        if (!empty($userIds)) {
+            $userObjs = $entityManager->getRepository(User::class)->findBy(['id' => array_keys($userIds)]);
+            foreach ($userObjs as $user) {
+                $users[$user->getId()] = $user;
+            }
+        }
+        
+        if (!empty($offreIds)) {
+            $offreObjs = $entityManager->getRepository(OffreEmploi::class)->findBy(['idOffre' => array_keys($offreIds)]);
+            foreach ($offreObjs as $offre) {
+                $offres[$offre->getIdOffre()] = $offre;
+            }
+        }
+
+        $html = $this->renderView('pdf/candidatures_list_admin.html.twig', [
+            'candidatures' => $candidatures,
+            'users' => $users,
+            'offres' => $offres,
+        ]);
+
+        $filename = 'candidatures_admin_' . date('d-m-Y') . '.pdf';
+
+        return $pdfService->generatePdfResponse($html, $filename);
+    }
+
+    // ── Export PDF - Détail d'une candidature ────────────────────────
+    #[Route('/candidatures/{id}/export-pdf', name: 'app_admin_candidature_detail_pdf', methods: ['GET'])]
+    public function exportCandidatureDetailPdf(
+        Candidature $candidature,
+        EntityManagerInterface $entityManager,
+        SessionInterface $session,
+        PdfService $pdfService
+    ): Response {
+        $access = $this->requireAdmin($session);
+        if ($access instanceof RedirectResponse) {
+            return $access;
+        }
+
+        $candidat = $entityManager->getRepository(User::class)->find($candidature->getIdUtilisateur());
+        $offre = $entityManager->getRepository(OffreEmploi::class)->find($candidature->getIdOffre());
+
+        $html = $this->renderView('pdf/candidature_detail.html.twig', [
+            'candidature' => $candidature,
+            'candidat' => $candidat,
+            'offre' => $offre,
+        ]);
+
+        $filename = 'candidature_' . $candidature->getIdCandidature() . '_' . date('d-m-Y') . '.pdf';
+
+        return $pdfService->generatePdfResponse($html, $filename);
     }
 
     #[Route('/preferences', name: 'app_admin_preferences', methods: ['GET'])]

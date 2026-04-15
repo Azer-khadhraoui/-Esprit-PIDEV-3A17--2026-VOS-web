@@ -104,8 +104,13 @@
                             {% if fieldErrors.statut is defined %}
                                 <small style="color:#b91c1c;font-size:0.82rem;display:block;margin-top:4px;">{{ fieldErrors.statut }}</small>
                             {% endif %}
-                            <button type="submit" class="btn-save">Enregistrer</button>
-                            <a href="{{ path('app_admin_candidatures') }}" class="btn-cancel">Annuler</a>
+                            <div style="display: flex; gap: 10px; margin-top: 12px;">
+                                <a href="{{ path('app_admin_candidature_detail_pdf', {id: candidature.idCandidature}) }}" class="btn-cancel" style="background-color: #4361ee; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                                    📄 Exporter en PDF
+                                </a>
+                                <button type="submit" class="btn-save">Enregistrer</button>
+                                <a href="{{ path('app_admin_candidatures') }}" class="btn-cancel">Annuler</a>
+                            </div>
                         </form>
                     </div>
                 </div>

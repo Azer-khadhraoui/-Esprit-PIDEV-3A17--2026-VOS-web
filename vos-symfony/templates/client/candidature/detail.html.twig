@@ -365,6 +365,7 @@
         </div>
 
         <div class="actions">
+            <a href="{{ path('app_client_candidature_detail_pdf', {id_candidature: candidature.idCandidature}) }}" class="btn" title="Télécharger en PDF">📄 Exporter en PDF</a>
             <a href="{{ path('app_client_candidature_edit', {id_candidature: candidature.idCandidature}) }}" class="btn">Modifier</a>
             <a href="{{ path('app_client_candidatures') }}" class="btn btn-light">Retour</a>
         </div>

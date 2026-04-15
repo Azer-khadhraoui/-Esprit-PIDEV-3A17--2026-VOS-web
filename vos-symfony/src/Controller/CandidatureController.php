@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Form\CandidatureType;
 use App\Repository\CandidatureRepository;
 use App\Service\EmailService;
+use App\Service\PdfService;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -257,6 +258,64 @@ final class CandidatureController extends AbstractController
         }
 
         return $this->redirectToRoute('app_client_candidatures');
+    }
+
+    // ── Export PDF - Liste des candidatures ───────────────────────────
+    #[Route('/export-pdf', name: 'app_client_candidature_export_pdf', methods: ['GET'])]
+    public function exportListPdf(
+        CandidatureRepository $repo,
+        EntityManagerInterface $entityManager,
+        SessionInterface $session,
+        PdfService $pdfService
+    ): Response {
+        $idUtilisateur = (int) $session->get('user_id', 0);
+
+        if ($idUtilisateur <= 0) {
+            return $this->redirectToRoute('app_signin');
+        }
+
+        $candidatures = $repo->findBy(
+            ['id_utilisateur' => $idUtilisateur],
+            ['date_candidature' => 'DESC']
+        );
+
+        $offreTitles = $this->getOffreTitles($entityManager, $candidatures);
+
+        $html = $this->renderView('pdf/candidatures_list_client.html.twig', [
+            'candidatures' => $candidatures,
+            'offreTitles' => $offreTitles,
+        ]);
+
+        $filename = 'mes_candidatures_' . date('d-m-Y') . '.pdf';
+
+        return $pdfService->generatePdfResponse($html, $filename);
+    }
+
+    // ── Export PDF - Détail d'une candidature ────────────────────────
+    #[Route('/{id_candidature}/export-pdf', name: 'app_client_candidature_detail_pdf', methods: ['GET'])]
+    public function exportDetailPdf(
+        Candidature $candidature,
+        EntityManagerInterface $entityManager,
+        SessionInterface $session,
+        PdfService $pdfService
+    ): Response {
+        $idUtilisateur = (int) $session->get('user_id', 0);
+        if ($idUtilisateur <= 0 || $candidature->getIdUtilisateur() !== $idUtilisateur) {
+            return $this->redirectToRoute('app_signin');
+        }
+
+        $candidat = $entityManager->getRepository(User::class)->find($idUtilisateur);
+        $offre = $entityManager->getRepository(OffreEmploi::class)->find($candidature->getIdOffre());
+
+        $html = $this->renderView('pdf/candidature_detail.html.twig', [
+            'candidature' => $candidature,
+            'candidat' => $candidat,
+            'offre' => $offre,
+        ]);
+
+        $filename = 'candidature_' . $candidature->getIdCandidature() . '_' . date('d-m-Y') . '.pdf';
+
+        return $pdfService->generatePdfResponse($html, $filename);
     }
 
     // ── Helper methods ────────────────────────────────────────────────
