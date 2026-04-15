@@ -15,6 +15,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
@@ -281,18 +282,36 @@ class AdminController extends AbstractController
 
                 $verificationUrl = $publicBaseUrl . $verificationPath;
 
+                $downloadPath = $urlGenerator->generate('app_admin_document_download', [
+                    'ref' => $verificationPayload['ref'],
+                    'type' => $verificationPayload['type'],
+                    'name' => $verificationPayload['name'],
+                    'issued' => $verificationPayload['issued'],
+                    'sig' => $verificationSignature,
+                ], UrlGeneratorInterface::ABSOLUTE_PATH);
+                $downloadUrl = $publicBaseUrl . $downloadPath;
+
                 $pdfHtml = $this->renderView('admin/administrative_service_pdf.html.twig', [
                     'formData' => $formData,
                     'submittedAt' => new \DateTimeImmutable(),
                     'reference' => $reference,
                     'qrPayload' => $verificationUrl,
                     'verificationUrl' => $verificationUrl,
+                    'downloadUrl' => $downloadUrl,
                 ]);
 
                 $typePrefix = $formData['request_type'] === 'demission' ? 'demission' : 'conge';
                 $filename = sprintf('%s_%s.pdf', $typePrefix, (new \DateTimeImmutable())->format('Ymd_His'));
 
-                $response = new Response($pdfWrapper->getPdf($pdfHtml));
+                $pdfBinary = $pdfWrapper->getPdf($pdfHtml);
+
+                $storageDir = $this->getParameter('kernel.project_dir') . '/var/generated_pdfs';
+                if (!is_dir($storageDir)) {
+                    @mkdir($storageDir, 0777, true);
+                }
+                @file_put_contents($this->getGeneratedPdfPath($reference), $pdfBinary);
+
+                $response = new Response($pdfBinary);
                 $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, $filename);
                 $response->headers->set('Content-Type', 'application/pdf');
                 $response->headers->set('Content-Disposition', $disposition);
@@ -342,7 +361,54 @@ class AdminController extends AbstractController
             'type' => $type,
             'name' => $name,
             'issuedAt' => $issuedAt,
+            'downloadUrl' => $isValid
+                ? $this->generateUrl('app_admin_document_download', [
+                    'ref' => $reference,
+                    'type' => $type,
+                    'name' => $name,
+                    'issued' => $issued,
+                    'sig' => $signature,
+                ])
+                : null,
         ]);
+    }
+
+    #[Route('/document/download', name: 'app_admin_document_download', methods: ['GET'])]
+    public function downloadDocument(Request $request): Response
+    {
+        $reference = trim((string) $request->query->get('ref', ''));
+        $type = trim((string) $request->query->get('type', ''));
+        $name = trim((string) $request->query->get('name', ''));
+        $issued = trim((string) $request->query->get('issued', ''));
+        $signature = trim((string) $request->query->get('sig', ''));
+
+        if ($reference === '' || $type === '' || $name === '' || !ctype_digit($issued) || $signature === '') {
+            return new Response('Lien de telechargement invalide.', Response::HTTP_BAD_REQUEST);
+        }
+
+        $expectedSignature = $this->createDocumentSignature($reference, $type, $name, $issued);
+        if (!hash_equals($expectedSignature, $signature)) {
+            return new Response('Signature invalide.', Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$this->isValidReference($reference)) {
+            return new Response('Reference invalide.', Response::HTTP_BAD_REQUEST);
+        }
+
+        $pdfPath = $this->getGeneratedPdfPath($reference);
+        if (!is_file($pdfPath)) {
+            return new Response('Document introuvable. Regenerer le PDF depuis le backoffice.', Response::HTTP_NOT_FOUND);
+        }
+
+        $response = new BinaryFileResponse($pdfPath);
+        $disposition = $response->headers->makeDisposition(
+            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+            sprintf('document_%s.pdf', $reference)
+        );
+        $response->headers->set('Content-Type', 'application/pdf');
+        $response->headers->set('Content-Disposition', $disposition);
+
+        return $response;
     }
 
      #[Route('/candidatures', name: 'app_admin_candidatures', methods: ['GET'])]
@@ -812,5 +878,15 @@ class AdminController extends AbstractController
         }
 
         return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE) === false;
+    }
+
+    private function isValidReference(string $reference): bool
+    {
+        return (bool) preg_match('/^[A-Z0-9\-]+$/', $reference);
+    }
+
+    private function getGeneratedPdfPath(string $reference): string
+    {
+        return $this->getParameter('kernel.project_dir') . '/var/generated_pdfs/' . $reference . '.pdf';
     }
 }
