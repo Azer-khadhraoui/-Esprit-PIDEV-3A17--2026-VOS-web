@@ -30,7 +30,6 @@ class PasswordResetService
         $resetCode = (string) random_int(100000, 999999);
         $user
             ->setResetTokenHash(hash('sha256', $resetCode))
-            ->setResetRequestedAt(new \DateTimeImmutable())
             ->setResetExpiresAt(new \DateTimeImmutable('+15 minutes'));
 
         $this->userRepository->getEntityManager()->flush();
@@ -80,7 +79,6 @@ class PasswordResetService
         $user->setMotDePasse($hashedPassword);
         $user
             ->setResetTokenHash(null)
-            ->setResetRequestedAt(null)
             ->setResetExpiresAt(null);
 
         $this->userRepository->getEntityManager()->flush();

@@ -46,9 +46,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'reset_token_hash', type: 'string', length: 64, nullable: true)]
     private ?string $resetTokenHash = null;
 
-    #[ORM\Column(name: 'reset_requested_at', type: 'datetime_immutable', nullable: true)]
-    private ?\DateTimeImmutable $resetRequestedAt = null;
-
     #[ORM\Column(name: 'reset_expires_at', type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $resetExpiresAt = null;
 
@@ -149,18 +146,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setResetTokenHash(?string $resetTokenHash): static
     {
         $this->resetTokenHash = $resetTokenHash;
-
-        return $this;
-    }
-
-    public function getResetRequestedAt(): ?\DateTimeImmutable
-    {
-        return $this->resetRequestedAt;
-    }
-
-    public function setResetRequestedAt(?\DateTimeImmutable $resetRequestedAt): static
-    {
-        $this->resetRequestedAt = $resetRequestedAt;
 
         return $this;
     }
