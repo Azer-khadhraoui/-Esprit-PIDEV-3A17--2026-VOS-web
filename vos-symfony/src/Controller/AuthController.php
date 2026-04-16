@@ -3,10 +3,13 @@
 namespace App\Controller;
 
 use App\Dto\SignupDto;
+use App\Entity\User;
 use App\Form\SignupType;
+use App\Repository\UserRepository;
 use App\Service\PasswordResetService;
 use App\Service\UserAccountService;
 use App\Service\ValidationService;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -63,6 +66,7 @@ class AuthController extends AbstractController
     public function signin(
         Request $request,
         UserAccountService $userAccountService,
+        UserRepository $userRepository,
         SessionInterface $session
     ): Response
     {
@@ -81,14 +85,42 @@ class AuthController extends AbstractController
 
                 $email = trim((string) $request->request->get('email', ''));
                 $password = (string) $request->request->get('password', '');
+                $faceAuthMode = (string) $request->request->get('face_auth_mode', '0');
+                $faceSimilarity = (float) $request->request->get('face_similarity', 0);
 
-                if ($email === '' || $password === '') {
-                    $this->addFlash('error', 'Email et mot de passe sont obligatoires.');
+                if ($email === '') {
+                    $this->addFlash('error', 'Email obligatoire.');
                     return $this->redirectToRoute('app_signin');
                 }
 
                 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     $this->addFlash('error', 'Format email invalide.');
+                    return $this->redirectToRoute('app_signin');
+                }
+
+                if ($faceAuthMode === '1') {
+                    if ($faceSimilarity < 70.0) {
+                        $this->addFlash('error', sprintf('NN: similitude insuffisante (%.1f%%).', $faceSimilarity));
+                        return $this->redirectToRoute('app_signin');
+                    }
+
+                    $user = $userRepository->findByEmail($email);
+                    if (!$user || !$user->getImageProfil()) {
+                        $this->addFlash('error', 'Compte introuvable ou image de reference absente.');
+                        return $this->redirectToRoute('app_signin');
+                    }
+
+                    $this->createSessionForUser($session, $user);
+
+                    if (str_starts_with($user->getRole(), 'ADMIN')) {
+                        return $this->redirectToRoute('app_admin_dashboard');
+                    }
+
+                    return $this->redirectToRoute('client_opportunites');
+                }
+
+                if ($password === '') {
+                    $this->addFlash('error', 'Mot de passe obligatoire ou utilisez la reconnaissance faciale.');
                     return $this->redirectToRoute('app_signin');
                 }
 
@@ -103,42 +135,12 @@ class AuthController extends AbstractController
                         return $this->redirectToRoute('app_signin');
                     }
 
-                    // Session client
-                    if (!$session->isStarted()) {
-                        $session->start();
-                    }
-
-                    // Ensure only one active auth context at a time.
-                    $session->remove('admin_user_id');
-                    $session->remove('admin_user_role');
-                    $session->remove('admin_user_name');
-
-                    $session->set('user_id', $user->getId());
-                    $session->set('user_role', $user->getRole());
-                    $session->set('user_name', trim(($user->getPrenom() ?? '') . ' ' . ($user->getNom() ?? '')));
-                    $session->set('auth_scope', 'client');
-                    $session->save();
+                    $this->createSessionForUser($session, $user);
 
                     return $this->redirectToRoute('client_opportunites');
                 }
 
-                // Session admin
-                if (!$session->isStarted()) {
-                    $session->start();
-                }
-
-                // Ensure only one active auth context at a time.
-                $session->remove('user_id');
-                $session->remove('user_role');
-                $session->remove('user_name');
-
-                $session->set('admin_user_id', $user->getId());
-                $session->set('admin_user_role', $user->getRole());
-                $session->set('admin_user_name', trim(($user->getPrenom() ?? '') . ' ' . ($user->getNom() ?? '')));
-                $session->set('auth_scope', 'admin');
-
-                // Sauvegarder explicitement la session
-                $session->save();
+                $this->createSessionForUser($session, $user);
 
                 return $this->redirectToRoute('app_admin_dashboard');
             } catch (\Throwable) {
@@ -148,6 +150,38 @@ class AuthController extends AbstractController
         }
 
         return $this->render('auth/signin.html.twig', []);
+    }
+
+    #[Route('/signin/face-reference', name: 'app_signin_face_reference', methods: ['GET'])]
+    public function signinFaceReference(Request $request, UserRepository $userRepository): JsonResponse
+    {
+        $email = trim((string) $request->query->get('email', ''));
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return new JsonResponse(['ok' => false, 'message' => 'Email invalide.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $user = $userRepository->findByEmail($email);
+        if (!$user) {
+            return new JsonResponse(['ok' => false, 'message' => 'Compte introuvable.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $faceDescriptor = null;
+        if ($user->getFaceDescriptor()) {
+            $decoded = json_decode((string) $user->getFaceDescriptor(), true);
+            if (is_array($decoded)) {
+                $faceDescriptor = array_map(static fn ($value) => (float) $value, $decoded);
+            }
+        }
+
+        if (!$user->getImageProfil() && !$faceDescriptor) {
+            return new JsonResponse(['ok' => false, 'message' => 'Aucune reference faciale disponible.'], Response::HTTP_NOT_FOUND);
+        }
+
+        return new JsonResponse([
+            'ok' => true,
+            'imageUrl' => $user->getImageProfil(),
+            'referenceDescriptor' => $faceDescriptor,
+        ]);
     }
 
     #[Route('/logout', name: 'app_logout', methods: ['POST'])]
@@ -285,5 +319,36 @@ class AuthController extends AbstractController
         }
 
         return null;
+    }
+
+    private function createSessionForUser(SessionInterface $session, User $user): void
+    {
+        if (!$session->isStarted()) {
+            $session->start();
+        }
+
+        if (str_starts_with($user->getRole(), 'ADMIN')) {
+            $session->remove('user_id');
+            $session->remove('user_role');
+            $session->remove('user_name');
+
+            $session->set('admin_user_id', $user->getId());
+            $session->set('admin_user_role', $user->getRole());
+            $session->set('admin_user_name', trim(($user->getPrenom() ?? '') . ' ' . ($user->getNom() ?? '')));
+            $session->set('auth_scope', 'admin');
+            $session->save();
+
+            return;
+        }
+
+        $session->remove('admin_user_id');
+        $session->remove('admin_user_role');
+        $session->remove('admin_user_name');
+
+        $session->set('user_id', $user->getId());
+        $session->set('user_role', $user->getRole());
+        $session->set('user_name', trim(($user->getPrenom() ?? '') . ' ' . ($user->getNom() ?? '')));
+        $session->set('auth_scope', 'client');
+        $session->save();
     }
 }
