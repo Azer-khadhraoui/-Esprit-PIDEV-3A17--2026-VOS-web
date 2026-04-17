@@ -10,6 +10,7 @@ use App\Form\AdminUserType;
 use App\Service\AdminDashboardService;
 use App\Service\GroqReasonEnhancer;
 use App\Service\AdminUserService;
+use App\Service\LanguageToolReasonEnhancer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -132,7 +133,7 @@ class AdminController extends AbstractController
     }
 
     #[Route('/users/service-administratif', name: 'app_admin_users_administrative_service', methods: ['GET', 'POST'])]
-    public function administrativeService(Request $request, SessionInterface $session, GroqReasonEnhancer $reasonEnhancer, DompdfWrapperInterface $pdfWrapper, UrlGeneratorInterface $urlGenerator): Response
+    public function administrativeService(Request $request, SessionInterface $session, GroqReasonEnhancer $reasonEnhancer, LanguageToolReasonEnhancer $languageToolEnhancer, DompdfWrapperInterface $pdfWrapper, UrlGeneratorInterface $urlGenerator): Response
     {
         $access = $this->requireAdmin($session);
         if ($access instanceof RedirectResponse) {
@@ -189,8 +190,9 @@ class AdminController extends AbstractController
 
             $action = (string) $request->request->get('_action', 'generate_pdf');
             $isEnhanceAction = $action === 'enhance_reason';
+            $isLanguageToolAction = $action === 'enhance_reason_languagetool';
 
-            if ($isEnhanceAction) {
+            if ($isEnhanceAction || $isLanguageToolAction) {
                 if (mb_strlen($formData['reason']) < 5 || mb_strlen($formData['reason']) > 2000) {
                     $errors['reason'] = 'Le motif doit contenir entre 5 et 2000 caracteres pour etre ameliore.';
                 }
@@ -253,7 +255,22 @@ class AdminController extends AbstractController
                 }
             }
 
-            if (!$isEnhanceAction && $errors === []) {
+            if ($isLanguageToolAction && $errors === []) {
+                try {
+                    $originalReason = $formData['reason'];
+                    $formData['reason'] = $languageToolEnhancer->enhance($formData['reason']);
+
+                    if ($formData['reason'] === $originalReason) {
+                        $this->addFlash('success', 'Aucune correction detectee par LanguageTool.');
+                    } else {
+                        $this->addFlash('success', 'Motif corrige avec LanguageTool. Verifiez puis cliquez sur Generer PDF.');
+                    }
+                } catch (\Throwable $exception) {
+                    $errors['_form'] = $exception->getMessage();
+                }
+            }
+
+            if (!$isEnhanceAction && !$isLanguageToolAction && $errors === []) {
                 $reference = sprintf('ADM-%s-%s', (new \DateTimeImmutable())->format('Ymd'), strtoupper(substr(sha1($formData['email'] . microtime(true)), 0, 6)));
                 $issuedAt = (new \DateTimeImmutable())->getTimestamp();
                 $verificationPayload = [

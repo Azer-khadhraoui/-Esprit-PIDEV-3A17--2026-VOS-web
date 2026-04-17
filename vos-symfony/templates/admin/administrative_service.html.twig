@@ -190,6 +190,7 @@
                 <div class="service-actions">
                     <button class="btn-edit" type="submit" name="_action" value="generate_pdf">Generer PDF</button>
                     <button class="btn-filter" type="submit" name="_action" value="enhance_reason" {% if not isGroqConfigured %}disabled title="Configurez GROQ_API_KEY dans .env.local"{% endif %}>Ameliorer avec IA</button>
+                    <button class="btn-filter" type="submit" name="_action" value="enhance_reason_languagetool">Corriger avec LanguageTool</button>
                     <span class="table-badge">Le fichier sera telecharge automatiquement.</span>
                 </div>
                 {% if not isGroqConfigured %}
