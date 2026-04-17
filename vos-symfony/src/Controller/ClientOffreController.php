@@ -10,6 +10,7 @@ use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -252,34 +253,53 @@ class ClientOffreController extends AbstractController
             return $this->redirectToRoute('app_signin');
         }
 
-        // Récupérer les préférences du candidat
+        // ─── Récupérer les préférences du candidat ─────────────────────────
         $preference = $entityManager->getRepository(PreferenceCandidature::class)
             ->findOneBy(['id_utilisateur' => $idUtilisateur]);
 
-        // Récupérer tous les offres ouvertes
+        // ─── Récupérer toutes les offres ouvertes ──────────────────────────
         $offres = $entityManager->getRepository(OffreEmploi::class)
             ->findBy(['statutOffre' => 'OUVERTE'], ['datePublication' => 'DESC']);
 
-        // Calculer les scores de matching
+        if (empty($offres)) {
+            // Aucune offre disponible dans le système
+            return $this->render('client/candidature/offres_compatibles.html.twig', [
+                'offresAvecScore' => [],
+                'preference' => $preference,
+                'userName' => $session->get('user_name', 'Candidat'),
+                'activePage' => 'offres-compatibles',
+                'pagination' => [
+                    'page' => 1,
+                    'totalPages' => 0,
+                    'total' => 0,
+                ],
+                'message' => 'Aucune offre disponible pour le moment.',
+            ]);
+        }
+
+        // ─── Calculer les scores de matching ────────────────────────────────
         $offresAvecScore = [];
         foreach ($offres as $offre) {
             $matching = $matchingService->calculateMatching($offre, $preference);
+            
+            // Inclure toutes les offres, même sans préférences
+            // pour que l'utilisateur voie ce qui est disponible
             $offresAvecScore[] = [
                 'offre' => $offre,
                 'matching' => $matching,
             ];
         }
 
-        // Trier par score décroissant
+        // ─── Trier par score décroissant ───────────────────────────────────
         usort($offresAvecScore, function ($a, $b) {
             return $b['matching']['score'] <=> $a['matching']['score'];
         });
 
-        // Pagination
+        // ─── Pagination ────────────────────────────────────────────────────
         $page = max(1, (int) $request->query->get('page', 1));
         $perPage = 10;
         $total = count($offresAvecScore);
-        $totalPages = ceil($total / $perPage);
+        $totalPages = $total > 0 ? (int) ceil($total / $perPage) : 0;
         
         $startIndex = ($page - 1) * $perPage;
         $paginatedOffres = array_slice($offresAvecScore, $startIndex, $perPage);
@@ -329,6 +349,46 @@ class ClientOffreController extends AbstractController
             'preference' => $preference,
             'matching' => $matchingResult,
             'userName' => $session->get('user_name', 'Candidat'),
+            'activePage' => 'offres-compatibles',
+        ]);
+    }
+
+    #[Route('/api/offre/{idOffre}/matching-score-json', name: 'client_offre_matching_score_json', methods: ['GET'])]
+    public function matchingScoreJson(
+        #[MapEntity(id: 'idOffre')] OffreEmploi $offre,
+        EntityManagerInterface $entityManager,
+        SessionInterface $session,
+        MatchingService $matchingService
+    ): Response {
+        $isClientAuthenticated = (bool) $session->get('user_id')
+            && (string) $session->get('user_role', '') === 'CLIENT'
+            && (string) $session->get('auth_scope', '') === 'client';
+
+        if (!$isClientAuthenticated) {
+            return new JsonResponse(['error' => 'Unauthorized'], 401);
+        }
+
+        $idUtilisateur = (int) $session->get('user_id', 0);
+        if ($idUtilisateur <= 0) {
+            return new JsonResponse(['error' => 'User not found'], 401);
+        }
+
+        // Récupérer les préférences du candidat
+        $preference = $entityManager->getRepository(PreferenceCandidature::class)
+            ->findOneBy(['id_utilisateur' => $idUtilisateur]);
+
+        // Calculer le score de matching
+        $matchingResult = $matchingService->calculateMatching($offre, $preference);
+
+        return new JsonResponse([
+            'offre' => [
+                'id' => $offre->getIdOffre(),
+                'titre' => $offre->getTitre(),
+                'typeContrat' => $offre->getTypeContrat(),
+                'workPreference' => $offre->getWorkPreference(),
+                'lieu' => $offre->getLieu(),
+            ],
+            'matching' => $matchingResult,
         ]);
     }
 
