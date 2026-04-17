@@ -16,6 +16,8 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class ClientOffreController extends AbstractController
 {
+    private const COMPARE_SESSION_KEY = 'compare_offer_ids';
+
     public function __construct(
         private readonly OffreTranslationAiService $offreTranslationAiService,
         private readonly OffreChatFilterAiService $offreChatFilterAiService,
@@ -116,6 +118,7 @@ class ClientOffreController extends AbstractController
         return $this->render('client/opportunites.html.twig', [
             'offers' => $offers,
             'criteriaByOffer' => $criteriaByOffer,
+            'compareOfferIds' => $this->getCompareOfferIdsFromSession($session),
             'isClientAuthenticated' => $isClientAuthenticated,
             'isAdminAuthenticated' => $isAdminAuthenticated,
             'userName' => $displayName,
@@ -406,6 +409,142 @@ class ClientOffreController extends AbstractController
         ]);
     }
 
+    #[Route('/opportunites/compare/session/toggle', name: 'client_opportunites_compare_toggle', methods: ['POST'])]
+    public function toggleCompareOffer(Request $request, SessionInterface $session): JsonResponse
+    {
+        if (!$this->isOpportunitesUserAuthenticated($session)) {
+            return $this->json([
+                'message' => 'Unauthorized',
+            ], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        $payload = json_decode((string) $request->getContent(), true);
+        if (!is_array($payload)) {
+            return $this->json([
+                'message' => 'Invalid payload.',
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $offerId = (int) ($payload['offerId'] ?? 0);
+        if ($offerId <= 0) {
+            return $this->json([
+                'message' => 'offerId is required.',
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $selected = $this->getCompareOfferIdsFromSession($session);
+        $index = array_search($offerId, $selected, true);
+
+        if ($index !== false) {
+            unset($selected[$index]);
+            $selected = array_values($selected);
+        } else {
+            if (count($selected) >= 4) {
+                return $this->json([
+                    'message' => 'Vous pouvez comparer au maximum 4 offres par session.',
+                    'selectedOfferIds' => $selected,
+                    'count' => count($selected),
+                ], JsonResponse::HTTP_BAD_REQUEST);
+            }
+
+            $selected[] = $offerId;
+        }
+
+        $session->set(self::COMPARE_SESSION_KEY, $selected);
+
+        return $this->json([
+            'selectedOfferIds' => $selected,
+            'count' => count($selected),
+        ]);
+    }
+
+    #[Route('/opportunites/compare/session', name: 'client_opportunites_compare_state', methods: ['GET'])]
+    public function compareOfferState(SessionInterface $session): JsonResponse
+    {
+        if (!$this->isOpportunitesUserAuthenticated($session)) {
+            return $this->json([
+                'message' => 'Unauthorized',
+            ], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        $selected = $this->getCompareOfferIdsFromSession($session);
+
+        return $this->json([
+            'selectedOfferIds' => $selected,
+            'count' => count($selected),
+        ]);
+    }
+
+    #[Route('/opportunites/compare/session/clear', name: 'client_opportunites_compare_clear', methods: ['POST'])]
+    public function clearCompareOffer(SessionInterface $session): JsonResponse
+    {
+        if (!$this->isOpportunitesUserAuthenticated($session)) {
+            return $this->json([
+                'message' => 'Unauthorized',
+            ], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        $session->remove(self::COMPARE_SESSION_KEY);
+
+        return $this->json([
+            'selectedOfferIds' => [],
+            'count' => 0,
+        ]);
+    }
+
+    #[Route('/opportunites/compare/session/preview', name: 'client_opportunites_compare_preview', methods: ['POST'])]
+    public function compareOfferPreview(EntityManagerInterface $entityManager, SessionInterface $session): JsonResponse
+    {
+        if (!$this->isOpportunitesUserAuthenticated($session)) {
+            return $this->json([
+                'message' => 'Unauthorized',
+            ], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        $selected = $this->getCompareOfferIdsFromSession($session);
+        if (count($selected) < 2 || count($selected) > 4) {
+            return $this->json([
+                'message' => 'Selection invalide. Choisissez entre 2 et 4 offres.',
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $offers = $entityManager->getRepository(OffreEmploi::class)->findBy(['idOffre' => $selected]);
+        $offersById = [];
+        foreach ($offers as $offer) {
+            $offersById[(int) $offer->getIdOffre()] = $offer;
+        }
+
+        $criteriaByOffer = $this->getLatestCriteriaByOffer($entityManager);
+        $comparisonOffers = [];
+        foreach ($selected as $offerId) {
+            if (!isset($offersById[$offerId])) {
+                continue;
+            }
+
+            $offer = $offersById[$offerId];
+            $criteria = $criteriaByOffer[$offerId] ?? null;
+            $skills = [];
+            if (is_array($criteria) && isset($criteria['competences_requises']) && is_string($criteria['competences_requises'])) {
+                $lines = preg_split('/\r\n|\r|\n/', $criteria['competences_requises']) ?: [];
+                $skills = array_values(array_filter(array_map(static fn (string $line): string => trim(preg_replace('/^[-*]\s*/', '', $line) ?? $line), $lines), static fn (string $line): bool => $line !== ''));
+            }
+
+            $comparisonOffers[] = [
+                'idOffre' => (int) $offer->getIdOffre(),
+                'titre' => (string) ($offer->getTitre() ?? 'Offre'),
+                'typeContrat' => (string) ($offer->getTypeContrat() ?? 'N/A'),
+                'workPreference' => (string) ($offer->getWorkPreference() ?? 'N/A'),
+                'lieu' => (string) ($offer->getLieu() ?? 'N/A'),
+                'competencesRequises' => $skills,
+            ];
+        }
+
+        return $this->json([
+            'offers' => $comparisonOffers,
+            'count' => count($comparisonOffers),
+        ]);
+    }
+
     private function normalizeText(mixed $value): ?string
     {
         if (!is_string($value)) {
@@ -415,6 +554,33 @@ class ClientOffreController extends AbstractController
         $value = trim($value);
 
         return $value === '' ? null : $value;
+    }
+
+    private function isOpportunitesUserAuthenticated(SessionInterface $session): bool
+    {
+        $authScope = (string) $session->get('auth_scope', '');
+        $hasClientSession = (bool) $session->get('user_id') && (string) $session->get('user_role', '') === 'CLIENT';
+        $hasAdminSession = (bool) $session->get('admin_user_id') && str_starts_with((string) $session->get('admin_user_role', ''), 'ADMIN');
+
+        return $authScope === '' ? ($hasClientSession || $hasAdminSession) : (
+            ($authScope === 'client' && $hasClientSession)
+            || ($authScope === 'admin' && $hasAdminSession)
+        );
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function getCompareOfferIdsFromSession(SessionInterface $session): array
+    {
+        $raw = $session->get(self::COMPARE_SESSION_KEY, []);
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $normalized = array_values(array_unique(array_filter(array_map(static fn (mixed $value): int => (int) $value, $raw), static fn (int $value): bool => $value > 0)));
+
+        return array_slice($normalized, 0, 4);
     }
 
     /**
