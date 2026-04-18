@@ -53,9 +53,10 @@ class ClientOffreController extends AbstractController
         $workPreference = $this->normalizeText($request->query->get('work_preference'));
         $lieu = $this->normalizeText($request->query->get('lieu'));
         $statut = $this->normalizeText($request->query->get('statut'));
+        $normalizedStatut = $statut !== null ? strtoupper($statut) : null;
 
-        if ($statut === 'ACTIVE') {
-            $statut = 'OUVERTE';
+        if ($normalizedStatut === 'ACTIVE') {
+            $normalizedStatut = 'OUVERTE';
         }
 
         $qb = $offreRepository->createQueryBuilder('o');
@@ -84,14 +85,21 @@ class ClientOffreController extends AbstractController
                 ->setParameter('lieu', '%'.$lieu.'%');
         }
 
-        if ($statut !== null) {
-            $qb
-                ->andWhere('o.statutOffre = :statut')
-                ->setParameter('statut', $statut);
+        if ($normalizedStatut !== null) {
+            if ($normalizedStatut === 'OUVERTE') {
+                // Keep compatibility with legacy values saved as ACTIVE.
+                $qb
+                    ->andWhere('UPPER(COALESCE(o.statutOffre, \'\')) IN (:openStatuts)')
+                    ->setParameter('openStatuts', ['OUVERTE', 'ACTIVE']);
+            } else {
+                $qb
+                    ->andWhere('UPPER(COALESCE(o.statutOffre, \'\')) = :statut')
+                    ->setParameter('statut', $normalizedStatut);
+            }
         } else {
             $qb
-                ->andWhere('o.statutOffre IN (:openStatuts)')
-                ->setParameter('openStatuts', ['OUVERTE']);
+                ->andWhere('UPPER(COALESCE(o.statutOffre, \'\')) IN (:openStatuts)')
+                ->setParameter('openStatuts', ['OUVERTE', 'ACTIVE']);
         }
 
         $countQb = clone $qb;
@@ -138,13 +146,14 @@ class ClientOffreController extends AbstractController
                 'type_contrat' => $typeContrat,
                 'work_preference' => $workPreference,
                 'lieu' => $lieu,
-                'statut' => $statut,
+                'statut' => $normalizedStatut,
                 'page' => $page,
             ],
             'filterOptions' => [
-                'typesContrat' => $this->getDistinctOffreValues($entityManager, 'type_contrat'),
-                'workPreferences' => $this->getDistinctOffreValues($entityManager, 'work_preference'),
-                'statuts' => $this->getDistinctOffreValues($entityManager, 'statut_offre'),
+                // Static options keep UI stable and avoid inconsistent labels.
+                'typesContrat' => ['CDI', 'CDD', 'Stage', 'Alternance', 'Freelance'],
+                'workPreferences' => ['On-site', 'Remote', 'Hybrid'],
+                'statuts' => ['OUVERTE', 'INACTIVE', 'FERMEE'],
             ],
         ]);
     }

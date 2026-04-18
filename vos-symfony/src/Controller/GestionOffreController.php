@@ -9,7 +9,7 @@ use App\Service\OffreDescriptionAiService;
 use App\Service\OffreNotificationService;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
-use Knp\Snappy\Pdf;
+use Nucleos\DompdfBundle\Wrapper\DompdfWrapperInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,7 +23,7 @@ class GestionOffreController extends AbstractController
     public function __construct(
         private readonly CriteriaSuggestionAiService $criteriaSuggestionAiService,
         private readonly OffreDescriptionAiService $offreDescriptionAiService,
-        private readonly Pdf $pdf,
+        private readonly DompdfWrapperInterface $pdf,
     ) {
     }
 
@@ -80,7 +80,7 @@ class GestionOffreController extends AbstractController
         ]);
 
         return new Response(
-            $this->pdf->getOutputFromHtml($html),
+            $this->pdf->getPdf($html),
             Response::HTTP_OK,
             [
                 'Content-Type' => 'application/pdf',
