@@ -10,6 +10,8 @@ use App\Repository\CandidatureRepository;
 use App\Repository\EntretienRepository;
 use App\Repository\EvaluationEntretienRepository;
 use App\Service\EntretienNotificationService;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,10 +22,13 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Twig\Environment;
 
 #[Route('/gestion-entretien')]
 class EntretienController extends AbstractController
 {
+    private const MSG_NON_AUTORISE = 'Non autorise';
     #[Route('/', name: 'gestion_entretien_dashboard', methods: ['GET'])]
     public function index(Request $request, EntretienRepository $repo, SessionInterface $session): Response
     {
@@ -117,7 +122,7 @@ class EntretienController extends AbstractController
     public function candidatureInfo(int $id, CandidatureRepository $candidatureRepo, EntityManagerInterface $em, SessionInterface $session): JsonResponse
     {
         if (!$session->get('admin_user_id')) {
-            return new JsonResponse(['error' => 'Non autorise'], 403);
+            return new JsonResponse(['error' => self::MSG_NON_AUTORISE], 403);
         }
 
         $candidature = $candidatureRepo->find($id);
@@ -154,7 +159,7 @@ class EntretienController extends AbstractController
         #[Autowire(env: 'GROQ_API_KEY')] string $groqApiKey,
     ): JsonResponse {
         if (!$session->get('admin_user_id')) {
-            return new JsonResponse(['error' => 'Non autorise'], 403);
+            return new JsonResponse(['error' => self::MSG_NON_AUTORISE], 403);
         }
 
         try {
@@ -262,6 +267,81 @@ class EntretienController extends AbstractController
         }
 
         return $questions;
+    }
+
+    #[Route('/search', name: 'gestion_entretien_search', methods: ['GET'])]
+    public function search(Request $request, EntretienRepository $repo, SessionInterface $session, CsrfTokenManagerInterface $csrf): JsonResponse
+    {
+        if (!$session->get('admin_user_id')) {
+            return new JsonResponse(['error' => self::MSG_NON_AUTORISE], 403);
+        }
+
+        $search = (string) $request->query->get('search', '');
+        $type = (string) $request->query->get('type', '');
+        $statut = (string) $request->query->get('statut', '');
+        $sortBy = (string) $request->query->get('sortBy', 'e.dateEntretien');
+        $sortDir = (string) $request->query->get('sortDir', 'DESC');
+
+        $entretiens = $repo->findWithFilters($search, $type, $statut, $sortBy, $sortDir);
+
+        $data = array_map(function (Entretien $e) use ($csrf): array {
+            return [
+                'id' => $e->getId(),
+                'dateEntretien' => $e->getDateEntretien()?->format('d/m/Y'),
+                'heureEntretien' => $e->getHeureEntretien()?->format('H:i'),
+                'typeEntretien' => $e->getTypeEntretien(),
+                'typeTest' => $e->getTypeTest(),
+                'statutEntretien' => $e->getStatutEntretien(),
+                'lieu' => $e->getLieu(),
+                'urlShow' => $this->generateUrl('gestion_entretien_show', ['id' => $e->getId()]),
+                'urlEdit' => $this->generateUrl('gestion_entretien_edit', ['id' => $e->getId()]),
+                'urlEval' => $this->generateUrl('app_evaluation_entretien_new', ['entretienId' => $e->getId()]),
+                'urlDelete' => $this->generateUrl('gestion_entretien_delete', ['id' => $e->getId()]),
+                'csrfDelete' => $csrf->getToken('delete' . $e->getId())->getValue(),
+            ];
+        }, $entretiens);
+
+        return new JsonResponse(['entretiens' => $data, 'total' => count($data)]);
+    }
+
+    #[Route('/{id}/pdf', name: 'gestion_entretien_pdf', methods: ['GET'])]
+    public function exportPdf(Entretien $entretien, SessionInterface $session, Environment $twig): Response
+    {
+        $access = $this->requireAdmin($session);
+        if ($access instanceof RedirectResponse) {
+            return $access;
+        }
+
+        $evaluation = $entretien->getEvaluationEntretiens()->first() ?: null;
+
+        $logoPath = $this->getParameter('kernel.project_dir') . '/public/images/logo.png';
+        $logoBase64 = is_file($logoPath)
+            ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
+            : null;
+
+        $html = $twig->render('pdf/entretien_report.html.twig', [
+            'entretien' => $entretien,
+            'evaluation' => $evaluation,
+            'generatedAt' => new \DateTime(),
+            'logoBase64' => $logoBase64,
+        ]);
+
+        $options = new Options();
+        $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', false);
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $filename = sprintf('entretien-%d-%s.pdf', $entretien->getId(), (new \DateTime())->format('Ymd'));
+
+        return new Response($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => sprintf('attachment; filename="%s"', $filename),
+        ]);
     }
 
     #[Route('/{id}', name: 'gestion_entretien_show', methods: ['GET'])]
